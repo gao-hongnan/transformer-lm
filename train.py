@@ -150,7 +150,7 @@ class Trainer:
             if current_step % self.val_every == 0:
                 val_loss, val_perpl = self.validate()
                 logger.info(
-                    f"Validation Loss: {val_loss:.4f}, Perplexity: {val_perpl:.4f}"
+                    f"Validation Loss: {val_loss:.4f}, Perplexity: {val_perpl:.4f}, lr: {self.optimizer.param_groups[0]['lr']}"
                 )
                 if val_loss < self.best_val_loss:
                     self.best_val_loss = val_loss
