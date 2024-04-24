@@ -81,6 +81,8 @@ class Trainer:
             #         self.num_steps,
             #     ),
             # )
+            print("Using scheduler")
+            print(f"lr: {self.lr}, lr_min: {self.lr_min}, t_warmup: {self.t_warmup}, num_steps: {self.num_steps}")
             lr_lambda = partial(
                 cosine_learning_rate_schedule,
                 max_learning_rate=self.lr,
