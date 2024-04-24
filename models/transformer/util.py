@@ -213,6 +213,7 @@ def cosine_learning_rate_schedule(
         float: The computed learning rate at the specified iteration.
     """
     if it < warmup_iters:
+        print(f"it={it}, warmup_iters={warmup_iters}, max_learning_rate={max_learning_rate}")
         # Linear warm-up phase from 0 to max_learning_rate
         return (it / warmup_iters) * max_learning_rate
     elif it <= cosine_cycle_iters:
