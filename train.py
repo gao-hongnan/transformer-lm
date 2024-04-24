@@ -219,7 +219,10 @@ def main():
     # Initialize WandB
     run_name = f"lr{args.lr_max}-bs{args.train_batch_size}"
     wandb.init(
-        project="transformer from scratch", entity="gashon", config=args, name=run_name
+        project="cs336-assignment-1-review",
+        entity="ee2023ee2023ee",
+        config=vars(args),
+        name=args.name,
     )
 
     # Device setup
