@@ -83,15 +83,27 @@ class Trainer:
             # )
             print("Using scheduler")
             print(f"lr: {self.lr}, lr_min: {self.lr_min}, t_warmup: {self.t_warmup}, num_steps: {self.num_steps}")
-            lr_lambda = partial(
-                cosine_learning_rate_schedule,
+            from models.transformer.util import get_cosine_annealing_with_warmup_and_post_annealing
+            self.scheduler = get_cosine_annealing_with_warmup_and_post_annealing(
+                optimizer=self.optimizer,
                 max_learning_rate=self.lr,
                 min_learning_rate=self.lr_min,
                 warmup_iters=self.t_warmup,
                 cosine_cycle_iters=self.num_steps,
+                last_epoch=-1,
+                verbose=True,
             )
 
-            self.scheduler = LambdaLR(self.optimizer, lr_lambda)
+
+            # lr_lambda = partial(
+            #     cosine_learning_rate_schedule,
+            #     max_learning_rate=self.lr,
+            #     min_learning_rate=self.lr_min,
+            #     warmup_iters=self.t_warmup,
+            #     cosine_cycle_iters=self.num_steps,
+            # )
+
+            # self.scheduler = LambdaLR(self.optimizer, lr_lambda)
 
     def validate(self):
         self.model.eval()
