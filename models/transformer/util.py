@@ -260,6 +260,7 @@ def _cosine_schedule_with_warmup_and_post_annealing_lr_lambda(
     float
         The calculated learning rate for the current training iteration.
     """
+    print(f"iter={iter}, warmup_iters={warmup_iters}, max_learning_rate={max_learning_rate}")
     if iter < warmup_iters:  # warmup phase
         return (iter / max(1, warmup_iters)) * max_learning_rate
     elif iter <= cosine_cycle_iters:  # cosine annealing phase
