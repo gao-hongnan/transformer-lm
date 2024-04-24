@@ -164,7 +164,7 @@ class Trainer:
             self.optimizer.step()
 
             if self.use_scheduler and self.scheduler is not None:
-                self.scheduler.step()
+                self.scheduler.step(current_step)
 
             total_train_loss += loss.item()
 
