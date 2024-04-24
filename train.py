@@ -5,6 +5,8 @@ import os
 import wandb
 import numpy as np
 import logging
+from functools import partial
+from torch.optim.lr_scheduler import LambdaLR
 
 from models.transformer.transformer import TransformerLM
 from models.transformer.util import (
@@ -69,16 +71,25 @@ class Trainer:
         self.best_val_loss = float("inf")
 
         if self.use_scheduler:
-            self.scheduler = torch.optim.lr_scheduler.LambdaLR(
-                self.optimizer,
-                lr_lambda=lambda step: cosine_learning_rate_schedule(
-                    step,
-                    self.lr,
-                    self.lr_min,
-                    self.t_warmup,
-                    self.num_steps,
-                ),
+            # self.scheduler = torch.optim.lr_scheduler.LambdaLR(
+            #     self.optimizer,
+            #     lr_lambda=lambda step: cosine_learning_rate_schedule(
+            #         step,
+            #         self.lr,
+            #         self.lr_min,
+            #         self.t_warmup,
+            #         self.num_steps,
+            #     ),
+            # )
+            lr_lambda = partial(
+                cosine_learning_rate_schedule,
+                max_learning_rate=self.lr,
+                min_learning_rate=self.lr_min,
+                warmup_iters=self.t_warmup,
+                cosine_cycle_iters=self.num_steps,
             )
+
+            self.scheduler = LambdaLR(self.optimizer, lr_lambda)
 
     def validate(self):
         self.model.eval()
