@@ -13,7 +13,7 @@ from core.config import GPTConfig
 from core.layers import GPT
 from core.nn_utils import gradient_clipping, CrossEntropyLoss
 from core.optimizer import AdamW
-from models.transformer.util import  _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
+from models.transformer.util import  _cosine_schedule_with_warmup_and_post_annealing_lr_lambda
 
 from models.util import load_batch, load_checkpoint, save_checkpoint
 
