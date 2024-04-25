@@ -83,27 +83,13 @@ class Trainer:
             # )
             print("Using scheduler")
             print(f"lr: {self.lr}, lr_min: {self.lr_min}, t_warmup: {self.t_warmup}, num_steps: {self.num_steps}")
-            from models.transformer.util import get_cosine_annealing_with_warmup_and_post_annealing
-            self.scheduler = get_cosine_annealing_with_warmup_and_post_annealing(
-                optimizer=self.optimizer,
+            from models.transformer.util import get_cosine_annealing_with_warmup_and_post_annealing, _cosine_schedule_with_warmup_and_post_annealing_lr_lambda
+            self.scheduler = partial(_cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
                 max_learning_rate=self.lr,
                 min_learning_rate=self.lr_min,
                 warmup_iters=self.t_warmup,
                 cosine_cycle_iters=self.num_steps,
-                last_epoch=-1,
-                verbose=True,
             )
-
-
-            # lr_lambda = partial(
-            #     cosine_learning_rate_schedule,
-            #     max_learning_rate=self.lr,
-            #     min_learning_rate=self.lr_min,
-            #     warmup_iters=self.t_warmup,
-            #     cosine_cycle_iters=self.num_steps,
-            # )
-
-            # self.scheduler = LambdaLR(self.optimizer, lr_lambda)
 
     def validate(self):
         self.model.eval()
@@ -164,7 +150,13 @@ class Trainer:
             self.optimizer.step()
 
             if self.use_scheduler and self.scheduler is not None:
-                self.scheduler.step(current_step)
+                # self.scheduler.step(current_step)
+                lr_or_lrs = self.scheduler(current_step)
+                if isinstance(lr_or_lrs, (float, int)):
+                    self.optimizer.param_groups[0]["lr"] = lr_or_lrs
+                elif isinstance(lr_or_lrs, (list, tuple)):
+                    for i, lr in enumerate(lr_or_lrs):
+                        self.optimizer.param_groups[i]["lr"] = lr
 
             total_train_loss += loss.item()
 
