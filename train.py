@@ -28,9 +28,10 @@ class Trainer:
         self,
         model,
         criterion: CrossEntropyLoss,
+        optimizer,
+        scheduler,
         train_dataloader,
         valid_dataloader,
-        optimizer,
         clip_norm,
         device,
         checkpoint_dir,
@@ -42,46 +43,36 @@ class Trainer:
         name,
         resume,
         lr,
-        lr_min,
         val_every,
-        use_scheduler,
         t_warmup,
         vocab_size,
     ) -> None:
         self.model = model
+
         self.criterion = criterion
+        self.optimizer = optimizer
+        self.scheduler = scheduler
+
         self.train_dataloader = train_dataloader
         self.valid_dataloader = valid_dataloader
-        self.optimizer = optimizer
         self.clip_norm = clip_norm
         self.device = device
         self.checkpoint_dir = checkpoint_dir
+
         self.train_batch_size = train_batch_size
         self.val_batch_size = val_batch_size
         self.context_length = context_length
+
         self.num_steps = num_steps
         self.num_val_batches = num_val_batches
+
         self.name = name
         self.resume = resume
         self.lr = lr
-        self.lr_min = lr_min
         self.val_every = val_every
-        self.use_scheduler = use_scheduler
         self.t_warmup = t_warmup
-        self.scheduler = None
         self.best_val_loss = float("inf")
         self.vocab_size = vocab_size
-
-        if self.use_scheduler:
-            print("Using scheduler")
-            print(f"lr: {self.lr}, lr_min: {self.lr_min}, t_warmup: {self.t_warmup}, num_steps: {self.num_steps}")
-            self.scheduler = partial(
-                _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
-                max_learning_rate=self.lr,
-                min_learning_rate=self.lr_min,
-                warmup_iters=self.t_warmup,
-                cosine_cycle_iters=self.num_steps,
-            )
 
     def validate(self):
         self.model.eval()
@@ -145,7 +136,7 @@ class Trainer:
             gradient_clipping(self.model.parameters(), max_norm=self.clip_norm, epsilon=1e-6)
             self.optimizer.step()
 
-            if self.use_scheduler and self.scheduler is not None:
+            if self.scheduler is not None:
                 # self.scheduler.step(current_step)
                 lr_or_lrs = self.scheduler(current_step)
                 if isinstance(lr_or_lrs, (float, int)):
@@ -188,66 +179,75 @@ class Trainer:
 def main(args: argparse.Namespace) -> None:
     torch.manual_seed(args.seed)
 
-    # Initialize WandB
     run_name = f"lr{args.lr_max}-bs{args.train_batch_size}"
     wandb.init(
-        project="cs336-assignment-1-review",
+        project=f"cs336-assignment-1-{args.name}",
         entity="ee2023ee2023ee",
         config=vars(args),
         name=run_name,
     )
 
-    # Device setup
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info(f"Using device: {device}")
 
-    # Data loading
     train_data, valid_data = np.memmap(args.train_dataset, dtype=np.uint16, mode="r"), np.memmap(
         args.valid_dataset, dtype=np.uint16, mode="r"
     )
 
     gpt_config = GPTConfig(
-        approximate=None,
-        activation_name="gelu",
+        approximate=args.gelu_approximation,
+        activation_name=args.activation_name,
         d_model=args.d_model,
         d_ff=args.d_ff,
         num_heads=args.num_heads,
         context_length=args.context_length,
-        attn_pdrop=0.1,
-        resid_pdrop=0.1,
-        bias=False,
+        attn_pdrop=args.attn_pdrop,
+        resid_pdrop=args.resid_pdrop,
+        bias=args.linear_bias,
         vocab_size=args.vocab_size,
         num_blocks=args.num_layers,
-        token_position_pdrop=0.1,
-        weight_tie=True,
+        token_position_pdrop=args.token_position_pdrop,
+        weight_tie=args.weight_tie,
     )
     pprint(gpt_config)
 
     model = GPT(config=gpt_config)
     model.to(device)
 
-    # Optimizer setup
     optimizer = AdamW(
         model.parameters(),
         lr=args.lr_max,
         betas=(args.beta1, args.beta2),
         weight_decay=args.weight_decay,
-        eps=1e-8,
+        eps=args.eps,
     )
     criterion = CrossEntropyLoss()
 
+    scheduler = partial(
+        _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
+        max_learning_rate=args.lr_max,
+        min_learning_rate=args.lr_min,
+        warmup_iters=args.t_warmup,
+        cosine_cycle_iters=args.t_cos,
+    )
+    if args.t_cos != args.num_steps:
+        logger.warning(
+            f"Number of steps ({args.num_steps}) and cosine cycle iterations ({args.t_cos}) are not equal. Will have more than 1 cycle."
+        )
+
     # Checkpoint directory
-    checkpoint_dir = "./checkpoints"
+    checkpoint_dir = args.checkpoint_dir
     os.makedirs(checkpoint_dir, exist_ok=True)
 
     # Trainer initialization and training
     trainer = Trainer(
         model=model,
         criterion=criterion,
+        optimizer=optimizer,
+        scheduler=scheduler,
         train_dataloader=train_data,
         valid_dataloader=valid_data,
-        optimizer=optimizer,
-        clip_norm=1.0,
+        clip_norm=args.clip_norm,
         device=device,
         checkpoint_dir=checkpoint_dir,
         train_batch_size=args.train_batch_size,
@@ -260,7 +260,6 @@ def main(args: argparse.Namespace) -> None:
         lr=args.lr_max,
         lr_min=args.lr_min,
         val_every=args.val_every,
-        use_scheduler=args.use_scheduler,
         t_warmup=args.t_warmup,
         vocab_size=args.vocab_size,
     )
@@ -270,4 +269,5 @@ def main(args: argparse.Namespace) -> None:
 
 if __name__ == "__main__":
     args = parse_args()
+    pprint(args)
     main(args=args)

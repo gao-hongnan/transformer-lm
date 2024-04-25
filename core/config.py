@@ -28,7 +28,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--name", type=str, default="tiny")
     parser.add_argument("--train_dataset", type=str, default=None)
     parser.add_argument("--valid_dataset", type=str, default=None)
-    parser.add_argument("--vocab_size", type=int, default=10_000)
+
+    parser.add_argument("--vocab_size", type=int, default=10_000)  # NOTE: Start of Model Metrics
     parser.add_argument("--context_length", type=int, default=256)
     parser.add_argument("--d_model", type=int, default=512)
     parser.add_argument("--num_layers", type=int, default=4)
@@ -36,30 +37,41 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--d_ff", type=int, default=2048)
     parser.add_argument("--attn_pdrop", type=float, default=0.1)
     parser.add_argument("--resid_pdrop", type=float, default=0.1)
-    parser.add_argument("--tie", action="store_true")
-    parser.add_argument("--lr_max", type=float, default=1e-2)
+    parser.add_argument("--token_position_pdrop", type=float, default=0.1)
+    parser.add_argument("--weight_tie", action="store_true")
+    parser.add_argument("--linear_bias", action="store_true")
+    parser.add_argument("--activation_name", type=str, default="gelu")
+    parser.add_argument("--gelu_approximation", type=str, default=None)
+    parser.add_argument("--post_norm", type=bool, default=False)
+    parser.add_argument("--layer_norm", action="store_true")
+    parser.add_argument("--no_layer_norm", action="store_false", dest="layer_norm")
+    parser.add_argument("--parallel", action="store_true")
+
+    parser.add_argument("--beta1", type=float, default=0.9)  # NOTE: Start Optimizer
+    parser.add_argument("--beta2", type=float, default=0.999)
+    parser.add_argument("--weight_decay", type=float, default=0.01)
+    parser.add_argument("--eps", type=float, default=1e-8)
+
+    parser.add_argument("--lr_max", type=float, default=1e-2)  # NOTE: Start of Scheduler
     parser.add_argument("--lr_min", type=float, default=1e-4)
     parser.add_argument("--t_warmup", type=int, default=0)
     parser.add_argument("--t_cos", type=int, default=1280000 // 256)
-    parser.add_argument("--beta1", type=float, default=0.9)
-    parser.add_argument("--beta2", type=float, default=0.999)
-    parser.add_argument("--weight_decay", type=float, default=0.01)
+
     parser.add_argument(
         "--resume",
         type=bool,
         default=False,
         help="Resume training from the latest checkpoint.",
     )
+    parser.add_argument("--checkpoint_dir", type=str, default="./checkpoints")
+
     parser.add_argument("--num_steps", type=int, default=12800000 // 256)
     parser.add_argument("--train_batch_size", type=int, default=128)
     parser.add_argument("--val_batch_size", type=int, default=128)
     parser.add_argument("--num_val_batches", type=int, default=2)
-    parser.add_argument("--post_norm", type=bool, default=False)
-    parser.add_argument("--layer_norm", action="store_true")
-    parser.add_argument("--no_layer_norm", action="store_false", dest="layer_norm")
+    parser.add_argument("--clip_norm", type=float, default=1.0)
+
     parser.add_argument("--val_every", type=int, default=400)
-    parser.add_argument("--parallel", action="store_true")
-    parser.add_argument("--use_scheduler", action="store_true")
     parser.add_argument("--seed", type=int, default=42)
 
     parser.add_argument(
