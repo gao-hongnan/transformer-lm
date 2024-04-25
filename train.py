@@ -5,6 +5,7 @@ from functools import partial
 
 import numpy as np
 import torch
+from torch import nn
 import wandb
 from omnivault.modules.loss import CrossEntropyLoss
 from omnivault.modules.nn_utils import gradient_clipping
@@ -17,6 +18,8 @@ from core.config import GPTConfig, parse_args
 from core.data import get_batch
 from core.layers import GPT
 from core.utils import load_checkpoint, save_checkpoint
+import numpy.typing as npt
+
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s (%(levelname)s): %(message)s")
 
@@ -26,27 +29,19 @@ logger = logging.getLogger(__name__)
 class Trainer:
     def __init__(
         self,
-        model,
-        criterion: CrossEntropyLoss,
-        optimizer,
-        scheduler,
-        train_dataloader,
-        valid_dataloader,
-        clip_norm,
-        device,
-        checkpoint_dir,
-        train_batch_size,
-        val_batch_size,
-        context_length,
-        num_steps,
-        num_val_batches,
-        name,
-        resume,
-        lr,
-        val_every,
-        t_warmup,
-        vocab_size,
+        args: argparse.Namespace,
+        *,
+        device: torch.device,
+        model: nn.Module,
+        criterion: nn.Module,
+        optimizer: torch.optim.Optimizer,
+        scheduler: torch.optim.lr_scheduler._LRScheduler,
+        train_dataloader: np.memmap[npt.NDArray[np.uint16]],
+        valid_dataloader: np.memmap[npt.NDArray[np.uint16]],
     ) -> None:
+        self.args = args
+        self.device = device
+
         self.model = model
 
         self.criterion = criterion
@@ -55,24 +50,13 @@ class Trainer:
 
         self.train_dataloader = train_dataloader
         self.valid_dataloader = valid_dataloader
-        self.clip_norm = clip_norm
-        self.device = device
-        self.checkpoint_dir = checkpoint_dir
 
-        self.train_batch_size = train_batch_size
-        self.val_batch_size = val_batch_size
-        self.context_length = context_length
+        self.checkpoint_dir = args.checkpoint_dir
 
-        self.num_steps = num_steps
-        self.num_val_batches = num_val_batches
+        self.num_steps = args.num_steps
+        self.num_val_batches = args.num_val_batches
 
-        self.name = name
-        self.resume = resume
-        self.lr = lr
-        self.val_every = val_every
-        self.t_warmup = t_warmup
         self.best_val_loss = float("inf")
-        self.vocab_size = vocab_size
 
     def validate(self):
         self.model.eval()
@@ -82,13 +66,13 @@ class Trainer:
             for _ in tqdm(range(self.num_val_batches), desc="Validation"):
                 inputs, targets = get_batch(
                     dataset=self.valid_dataloader,
-                    batch_size=self.val_batch_size,
-                    context_length=self.context_length,
+                    batch_size=self.args.valid_batch_size,
+                    context_length=self.args.context_length,
                     device_type=self.device.type,
                 )
                 # FIXME: min to bypass shape error at random
-                inputs = torch.minimum(inputs, torch.tensor(self.vocab_size - 1))
-                targets = torch.minimum(targets, torch.tensor(self.vocab_size - 1))
+                inputs = torch.minimum(inputs, torch.tensor(self.args.vocab_size - 1))
+                targets = torch.minimum(targets, torch.tensor(self.args.vocab_size - 1))
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 logits = self.model(inputs)
                 valid_loss = self.criterion(logits, targets)
@@ -107,9 +91,9 @@ class Trainer:
 
     def train(self):
         current_step = 0
-        if self.resume:
+        if self.args.resume:
             current_step = load_checkpoint(
-                f"{self.checkpoint_dir}/{self.name}_best_{self.lr}_{self.train_batch_size}.pth",
+                f"{self.checkpoint_dir}/{self.args.name}_best_{self.args.lr}_{self.args.train_batch_size}.pth",
                 self.model,
                 self.optimizer,
             )
@@ -121,8 +105,8 @@ class Trainer:
         ):
             inputs, targets = get_batch(
                 dataset=self.train_dataloader,
-                batch_size=self.train_batch_size,
-                context_length=self.context_length,
+                batch_size=self.args.train_batch_size,
+                context_length=self.args.context_length,
                 device_type=self.device.type,
             )
             inputs, targets = inputs.to(self.device), targets.to(self.device)
@@ -133,7 +117,7 @@ class Trainer:
 
             loss.backward()
 
-            gradient_clipping(self.model.parameters(), max_norm=self.clip_norm, epsilon=1e-6)
+            gradient_clipping(self.model.parameters(), max_norm=self.args.clip_norm, epsilon=1e-6)
             self.optimizer.step()
 
             if self.scheduler is not None:
@@ -152,7 +136,7 @@ class Trainer:
 
                 wandb.log({"average_train_loss": average_train_loss})
 
-            if current_step % self.val_every == 0:
+            if current_step % self.args.val_every == 0:
                 val_loss, val_perpl = self.validate()
 
                 logger.info(
@@ -162,7 +146,7 @@ class Trainer:
                     self.best_val_loss = val_loss
                     latest_checkpoint_path = os.path.join(
                         self.checkpoint_dir,
-                        f"{self.name}_best_{self.lr}_{self.train_batch_size}.pth",
+                        f"{self.args.name}_best_{self.args.lr}_{self.args.train_batch_size}.pth",
                     )
                     save_checkpoint(
                         self.model,
@@ -241,26 +225,14 @@ def main(args: argparse.Namespace) -> None:
 
     # Trainer initialization and training
     trainer = Trainer(
+        args=args,
         model=model,
         criterion=criterion,
         optimizer=optimizer,
         scheduler=scheduler,
         train_dataloader=train_data,
         valid_dataloader=valid_data,
-        clip_norm=args.clip_norm,
         device=device,
-        checkpoint_dir=checkpoint_dir,
-        train_batch_size=args.train_batch_size,
-        val_batch_size=args.val_batch_size,
-        context_length=args.context_length,
-        num_steps=args.num_steps,
-        num_val_batches=args.num_val_batches,
-        name=args.name,
-        resume=args.resume,
-        lr=args.lr_max,
-        val_every=args.val_every,
-        t_warmup=args.t_warmup,
-        vocab_size=args.vocab_size,
     )
 
     trainer.train()

@@ -26,7 +26,7 @@ python3 train.py \
 	--t_warmup 500 \
 	--t_cos 10000 \
 	--train_batch_size 32 \
-	--val_batch_size 16 \
+	--valid_batch_size 16 \
 	--num_steps 6000 \
 	--num_val_batches 10 \
 	--train_dataset "/data/owt-train.bin" \

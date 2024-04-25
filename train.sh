@@ -18,7 +18,7 @@
 	--checkpoint_dir "./checkpoints" \
 	--clip_norm 1.0 \
 	--train_batch_size 128 \
-	--val_batch_size 128 \
+	--valid_batch_size 128 \
 	--num_steps 10000 \
 	--num_val_batches 1 \
     --val_every 20 \

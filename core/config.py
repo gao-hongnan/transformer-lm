@@ -67,7 +67,7 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument("--num_steps", type=int, default=12800000 // 256)
     parser.add_argument("--train_batch_size", type=int, default=128)
-    parser.add_argument("--val_batch_size", type=int, default=128)
+    parser.add_argument("--valid_batch_size", type=int, default=128)
     parser.add_argument("--num_val_batches", type=int, default=2)
     parser.add_argument("--clip_norm", type=float, default=1.0)
 
