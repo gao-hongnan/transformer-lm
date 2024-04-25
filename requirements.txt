@@ -1,6 +1,5 @@
 certifi==2024.2.2
 charset-normalizer==3.3.2
--e git+https://github.com/stanford-cs336/spring2024-assignment1-basics@973a5a7f236935a0b18f0005b86ec126e8cf9866#egg=cs336_basics
 exceptiongroup==1.2.0
 filelock==3.13.3
 fsspec==2024.3.1
@@ -9,14 +8,15 @@ idna==3.6
 iniconfig==2.0.0
 Jinja2==3.1.3
 MarkupSafe==2.1.5
-memory-profiler @ file:///Users/ktietz/demo/mc3/conda-bld/memory_profiler_1630567160231/work
+memory-profiler
 mpmath==1.3.0
 networkx==3.2.1
 numpy==1.26.4
 packaging==24.0
 pickle-mixin==1.0.2
 pluggy==1.4.0
-psutil @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_c9b604bf-685f-47f6-8304-238e4e70557e1o7mmsot/croots/recipe/psutil_1656431274701/work
+psutil
+pydantic
 pytest==8.1.1
 PyYAML==6.0.1
 regex==2023.12.25
@@ -27,7 +27,7 @@ tiktoken==0.6.0
 tokenizers==0.15.2
 tomli==2.0.1
 torch==2.2.1
-tqdm @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_03acd6t6ca/croot/tqdm_1679561866522/work
+tqdm
 transformers==4.39.3
 typing_extensions==4.10.0
 urllib3==2.2.1

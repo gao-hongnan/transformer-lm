@@ -6,7 +6,7 @@ from .adapters import get_adamw_cls, run_get_lr_cosine_schedule
 from .common import FIXTURES_PATH
 
 
-def _optimize(opt_class) -> torch.Tensor:
+def _optimize(opt_class: torch.optim.Optimizer) -> torch.Tensor:
     torch.manual_seed(42)
     model = torch.nn.Linear(3, 2, bias=False)
     opt = opt_class(
@@ -28,7 +28,7 @@ def _optimize(opt_class) -> torch.Tensor:
     return model.weight.detach()
 
 
-def test_adamw():
+def test_adamw() -> None:
     """
     Our reference implementation yields slightly different results than the
     PyTorch AdamW, since there are a couple different ways that you can apply
@@ -51,7 +51,7 @@ def test_adamw():
     )
 
 
-def test_get_lr_cosine_schedule():
+def test_get_lr_cosine_schedule() -> None:
     max_learning_rate = 1
     min_learning_rate = 1 * 0.1
     warmup_iters = 7

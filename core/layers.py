@@ -4,7 +4,7 @@ got to treat 1s as masks."""
 from __future__ import annotations
 
 import math
-from typing import List, Literal, Optional, Tuple, Union, cast
+from typing import Literal, Optional, Tuple, Union, cast
 
 import torch
 from torch import nn
@@ -134,10 +134,13 @@ class ScaledDotProductAttention(nn.Module):
         mask: torch.BoolTensor | None = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         # fmt: off
-        d_q               = query.size(dim=-1)
+        _, _, T, d_q = query.size()
 
         attention_scores  = torch.matmul(query, key.transpose(dim0=-2, dim1=-1)) / torch.sqrt(torch.tensor(d_q).float())        # Q @ K.T = [B, H, T, d_q] @ [B, H, d_q, T] = [B, H, T, T]
-        attention_scores  = attention_scores.masked_fill(mask == 1, float("-inf")) if mask is not None else attention_scores    # [B, H, T, T]
+
+        if mask is not None:
+            mask = mask[:, :, :T, :T]
+            attention_scores  = attention_scores.masked_fill(mask == 1, float("-inf")) if mask is not None else attention_scores    # [B, H, T, T]
 
         softmax           = Softmax(dim=-1)
         attention_weights = softmax(attention_scores)               # [B, H, T, T]

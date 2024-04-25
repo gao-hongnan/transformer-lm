@@ -190,16 +190,14 @@ class Trainer:
         wandb.log({"average_train_loss": average_train_loss})
 
 
-def main() -> None:
-    torch.manual_seed(42)
-
+def parse_args() -> argparse.Namespace:
     # Set up argument parser
     parser = argparse.ArgumentParser(
         description="Train a Transformer model with custom hyperparameters and utilities."
     )
     parser.add_argument("--name", type=str, default="tiny")
-    parser.add_argument("--train_dataset", type=str, required=True)
-    parser.add_argument("--val_dataset", type=str, required=True)
+    parser.add_argument("--train_dataset", type=str, default=None)
+    parser.add_argument("--valid_dataset", type=str, default=None)
     parser.add_argument("--vocab_size", type=int, default=10_000)
     parser.add_argument("--ctx_len", type=int, default=256)
     parser.add_argument("--d_model", type=int, default=512)
@@ -232,9 +230,50 @@ def main() -> None:
     parser.add_argument("--val_every", type=int, default=400)
     parser.add_argument("--parallel", action="store_true")
     parser.add_argument("--use_scheduler", action="store_true")
+    parser.add_argument("--seed", type=int, default=42)
 
+    parser.add_argument(
+        "--checkpoint_path",
+        type=str,
+        help="Path to the model checkpoint.",
+    )
+    parser.add_argument(
+        "--vocab_filepath",
+        type=str,
+        help="Path to the vocabulary file.",
+    )
+
+    parser.add_argument(
+        "--merges_filepath",
+        type=str,
+        help="Path to the merges file.",
+    )
+    parser.add_argument(
+        "--max_length",
+        type=int,
+        default=256,
+        help="Maximum length of the generated text.",
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=1.0,
+        help="Temperature for softmax scaling. Lower is more deterministic.",
+    )
+    parser.add_argument(
+        "--top_p",
+        type=float,
+        default=0.9,
+        help="Top-p value for nucleus sampling. Lower is more focused.",
+    )
+    parser.add_argument("--prompt", type=str, default="Once upon a time,")
     # Parse arguments
     args = parser.parse_args()
+    return args
+
+
+def main(args: argparse.Namespace) -> None:
+    torch.manual_seed(args.seed)
 
     # Initialize WandB
     run_name = f"lr{args.lr_max}-bs{args.train_batch_size}"
@@ -252,7 +291,7 @@ def main() -> None:
     # Data loading
     train_data, valid_data = np.memmap(
         args.train_dataset, dtype=np.uint16, mode="r"
-    ), np.memmap(args.val_dataset, dtype=np.uint16, mode="r")
+    ), np.memmap(args.valid_dataset, dtype=np.uint16, mode="r")
 
     gpt_config = GPTConfig(
         approximate=None,
@@ -317,4 +356,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(args=args)

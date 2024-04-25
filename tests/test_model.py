@@ -15,7 +15,7 @@ from .adapters import (
 from .common import FIXTURES_PATH
 
 
-def test_positionwise_feedforward():
+def test_positionwise_feedforward() -> None:
     reference_weights = torch.load(
         FIXTURES_PATH / "positionwise_feedforward_weights.pt"
     )
@@ -34,7 +34,7 @@ def test_positionwise_feedforward():
     )
 
 
-def test_scaled_dot_product_attention():
+def test_scaled_dot_product_attention() -> None:
     torch.manual_seed(42)
     # Take the first batch item, so we test the 3D case
     # (input shape (batch_size, seq_len, d_k)) for scaled dot-product attention.
@@ -54,7 +54,7 @@ def test_scaled_dot_product_attention():
     )
 
 
-def test_4d_scaled_dot_product_attention():
+def test_4d_scaled_dot_product_attention() -> None:
     torch.manual_seed(42)
     # Shape: (batch_size, num_heads, seq_len, d_k)
     K = torch.load(FIXTURES_PATH / "scaled_dot_product_attention_K.pt")
@@ -73,7 +73,7 @@ def test_4d_scaled_dot_product_attention():
     )
 
 
-def test_multihead_self_attention():
+def test_multihead_self_attention() -> None:
     reference_weights = torch.load(
         FIXTURES_PATH / "unbatched_multihead_self_attention_weights.pt"
     )
@@ -96,7 +96,7 @@ def test_multihead_self_attention():
     )
 
 
-def test_transformer_lm():
+def test_transformer_lm() -> None:
     torch.manual_seed(42)
     vocab_size = 100
     context_length = 64
@@ -127,7 +127,7 @@ def test_transformer_lm():
     )
 
 
-def test_transformer_lm_truncated_input():
+def test_transformer_lm_truncated_input() -> None:
     torch.manual_seed(42)
     vocab_size = 100
     context_length = 64
@@ -162,7 +162,7 @@ def test_transformer_lm_truncated_input():
     )
 
 
-def test_transformer_block():
+def test_transformer_block() -> None:
     torch.manual_seed(42)
     reference_weights = torch.load(FIXTURES_PATH / "transformer_block_weights.pt")
     in_features = torch.load(FIXTURES_PATH / "in_features.pt")
@@ -187,7 +187,7 @@ def test_transformer_block():
     )
 
 
-def test_rmsnorm():
+def test_rmsnorm() -> None:
     reference_weights = torch.load(FIXTURES_PATH / "rmsnorm_weights.pt")
     in_features = torch.load(FIXTURES_PATH / "in_features.pt")
     expected_output = torch.load(FIXTURES_PATH / "rmsnorm_expected_output.pt")
@@ -200,7 +200,7 @@ def test_rmsnorm():
     )
 
 
-def test_gelu():
+def test_gelu() -> None:
     x = torch.tensor(
         [
             [0.2352, 0.9259, 0.5189, 0.4725, 0.9730],
@@ -231,7 +231,7 @@ def test_gelu():
     )
 
 
-def test_gelu_matches_pytorch():
+def test_gelu_matches_pytorch() -> None:
     x = torch.tensor(
         [
             [0.2352, 0.9259, 0.5189, 0.4725, 0.9730],

@@ -8,7 +8,7 @@ import pytest
 from .adapters import run_get_batch
 
 
-def test_get_batch():
+def test_get_batch() -> None:
     dataset = np.arange(0, 100)
     context_length = 7
     batch_size = 32

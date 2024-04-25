@@ -8,6 +8,7 @@ from typing import Iterable, Iterator, Literal
 import numpy as np
 import regex as re
 from rich.pretty import pprint
+
 from rustsrc import RustTokenizer, train_bpe
 
 PAT = re.compile(
