@@ -10,12 +10,12 @@ from rich.pretty import pprint
 from tqdm.auto import tqdm
 
 from core.config import GPTConfig
+from core.data import get_batch
 from core.layers import GPT
-from core.nn_utils import gradient_clipping, CrossEntropyLoss
+from core.nn_utils import CrossEntropyLoss, gradient_clipping
 from core.optimizer import AdamW
-from models.transformer.util import  _cosine_schedule_with_warmup_and_post_annealing_lr_lambda
-
-from models.util import load_batch, load_checkpoint, save_checkpoint
+from core.scheduler import _cosine_schedule_with_warmup_and_post_annealing_lr_lambda
+from core.utils import load_checkpoint, save_checkpoint
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s (%(levelname)s): %(message)s"
@@ -92,11 +92,11 @@ class Trainer:
         total_perpl = 0
         with torch.no_grad():
             for _ in tqdm(range(self.num_val_batches), desc="Validation"):
-                inputs, targets = load_batch(
-                    self.valid_dataloader,
-                    self.val_batch_size,
-                    self.context_length,
-                    self.device,
+                inputs, targets = get_batch(
+                    dataset=self.valid_dataloader,
+                    batch_size=self.val_batch_size,
+                    context_length=self.context_length,
+                    device_type=self.device.type,
                 )
                 # FIXME: min to bypass shape error at random
                 inputs = torch.minimum(inputs, torch.tensor(self.vocab_size - 1))
@@ -131,11 +131,11 @@ class Trainer:
             range(current_step, self.num_steps),
             desc=f"Training Step {self.num_steps+1}",
         ):
-            inputs, targets = load_batch(
-                self.train_dataloader,
-                self.train_batch_size,
-                self.context_length,
-                self.device,
+            inputs, targets = get_batch(
+                dataset=self.train_dataloader,
+                batch_size=self.train_batch_size,
+                context_length=self.context_length,
+                device_type=self.device.type,
             )
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
@@ -242,7 +242,7 @@ def main() -> None:
         project="cs336-assignment-1-review",
         entity="ee2023ee2023ee",
         config=vars(args),
-        name=args.name,
+        name=run_name,
     )
 
     # Device setup

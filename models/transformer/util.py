@@ -1,52 +1,8 @@
 import math
 from functools import partial
 
-import torch
 from torch.optim.lr_scheduler import LambdaLR
 from torch.optim.optimizer import Optimizer
-
-
-# def cross_entropy_loss(
-#     logits: torch.FloatTensor, targets: torch.LongTensor
-# ) -> torch.FloatTensor:
-#     """Given a tensor of logits and a tensor of targets, compute the cross-entropy loss.
-
-#     Args:
-#         logits: torch.FloatTensor
-#             Tensor of logits from the model.
-#             Shape is (batch_size, seq_len, vocab_size).
-#         targets: torch.LongTensor
-#             Tensor of targets.
-#             Shape is (batch_size, seq_len).
-
-#     Returns:
-#         loss: torch.FloatTensor
-#             Scalar tensor representing the cross-entropy loss.
-#     """
-
-#     if len(logits.shape) == 3:
-#         logits = logits.view(-1, logits.size(-1))
-#         targets = targets.view(-1)
-
-#     assert logits.size(0) == targets.size(0)
-
-#     s_logits = logits - torch.max(logits, dim=1, keepdim=True)[0]
-#     sum_logits = torch.sum(torch.exp(s_logits), dim=1)
-#     sum_log_exp = torch.log(sum_logits)
-
-#     logits_true_class = torch.gather(
-#         s_logits, dim=1, index=targets.unsqueeze(1)
-#     ).squeeze(1)
-#     logits_true_class = logits_true_class.squeeze()
-
-#     loss_per_example = sum_log_exp - logits_true_class
-#     return torch.mean(loss_per_example)
-
-
-# def perplexity(logits, target):
-#     perplexity = torch.exp(cross_entropy_loss(logits, target))
-
-#     return perplexity.item()
 
 
 def _cosine_schedule_with_warmup_and_post_annealing_lr_lambda(
