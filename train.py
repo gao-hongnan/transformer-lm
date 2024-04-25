@@ -93,7 +93,7 @@ class Trainer:
         current_step = 0
         if self.args.resume:
             current_step = load_checkpoint(
-                f"{self.checkpoint_dir}/{self.args.name}_best_{self.args.lr}_{self.args.train_batch_size}.pth",
+                f"{self.checkpoint_dir}/{self.args.name}_best_{self.args.train_batch_size}.pth",
                 self.model,
                 self.optimizer,
             )
@@ -146,7 +146,7 @@ class Trainer:
                     self.best_val_loss = val_loss
                     latest_checkpoint_path = os.path.join(
                         self.checkpoint_dir,
-                        f"{self.args.name}_best_{self.args.lr}_{self.args.train_batch_size}.pth",
+                        f"{self.args.name}_best_{self.args.train_batch_size}.pth",
                     )
                     save_checkpoint(
                         self.model,
