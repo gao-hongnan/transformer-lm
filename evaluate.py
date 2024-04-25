@@ -1,16 +1,17 @@
+import argparse
+
 import torch
+from omnivault.modules.activation import SoftmaxStable
 from rich.pretty import pprint
 
-from core.config import GPTConfig
+from core.config import GPTConfig, parse_args
 from core.layers import GPT
-from omnivault.modules.activation import Softmax
 from core.tokenizer import Tokenizer
 from core.utils import load_checkpoint
-from core.config import parse_args
 
 
-def softmax_with_temperature(dist, temperature: float) -> torch.Tensor:
-    softmax = Softmax(dim=-1)
+def softmax_with_temperature(dist: torch.Tensor, temperature: float) -> torch.Tensor:
+    softmax = SoftmaxStable(dim=-1)
     return softmax(dist / temperature)
 
 
@@ -21,7 +22,7 @@ def generate(
     prompt: str,
     max_length: int,
     temperature: float,
-    p: float = 0.9,
+    top_p: float = 0.9,
 ):
     tokens = tokenizer.encode(prompt)
     print("Generating from tokens:")
@@ -33,7 +34,7 @@ def generate(
             logits = model(input_tensor)
             logits = logits[0, -1]
             probs = softmax_with_temperature(logits, temperature)
-            if p < 1.0:
+            if top_p < 1.0:
                 sorted_probs, sorted_indices = torch.sort(
                     probs, dim=-1, descending=True
                 )
@@ -54,7 +55,7 @@ def generate(
         return decoded
 
 
-def main(args):
+def main(args: argparse.Namespace) -> str:
     gpt_config = GPTConfig(
         approximate=None,
         activation_name="gelu",
@@ -89,7 +90,7 @@ def main(args):
         prompt=args.prompt,
         max_length=args.max_length,
         temperature=args.temperature,
-        p=args.top_p,
+        top_p=args.top_p,
     )
     return result
 

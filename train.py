@@ -6,15 +6,18 @@ from functools import partial
 import numpy as np
 import torch
 import wandb
+from omnivault.modules.loss import CrossEntropyLoss
+from omnivault.modules.nn_utils import gradient_clipping
+from omnivault.optimizers.adamw import AdamW
+from omnivault.schedulers.cosine_annealing_warmup import (
+    _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
+)
 from rich.pretty import pprint
 from tqdm.auto import tqdm
 
 from core.config import GPTConfig
 from core.data import get_batch
 from core.layers import GPT
-from core.nn_utils import CrossEntropyLoss, gradient_clipping
-from core.optimizer import AdamW
-from core.scheduler import _cosine_schedule_with_warmup_and_post_annealing_lr_lambda
 from core.utils import load_checkpoint, save_checkpoint
 
 logging.basicConfig(

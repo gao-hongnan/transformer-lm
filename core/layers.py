@@ -7,11 +7,11 @@ import math
 from typing import Literal, Optional, Tuple, Union, cast
 
 import torch
+from omnivault.modules.activation import SoftmaxStable
 from torch import nn
 from torch.types import _device, _dtype
 
 from core.config import GPTConfig
-from omnivault.modules.activation import Softmax
 
 
 class RMSNorm(nn.Module):
@@ -142,7 +142,7 @@ class ScaledDotProductAttention(nn.Module):
             mask = mask[:, :, :T, :T]
             attention_scores  = attention_scores.masked_fill(mask == 1, float("-inf")) if mask is not None else attention_scores    # [B, H, T, T]
 
-        softmax           = Softmax(dim=-1)
+        softmax           = SoftmaxStable(dim=-1)
         attention_weights = softmax(attention_scores)               # [B, H, T, T]
         attention_weights = self.dropout(attention_weights)         # [B, H, T, T]
 

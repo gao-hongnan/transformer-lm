@@ -522,9 +522,9 @@ def run_softmax(in_features: torch.FloatTensor, dim: int) -> torch.FloatTensor:
         FloatTensor of with the same shape as `in_features` with the output of
         softmax normalizing the specified `dim`.
     """
-    from omnivault.modules.activation import Softmax
+    from omnivault.modules.activation import SoftmaxStable
 
-    softmax = Softmax(dim=dim)
+    softmax = SoftmaxStable(dim=dim)
     out = softmax(z=in_features)
     return cast(torch.FloatTensor, out)
 
@@ -546,7 +546,7 @@ def run_cross_entropy(
     Returns:
         Tensor of shape () with the average cross-entropy loss across examples.
     """
-    from core.nn_utils import CrossEntropyLoss
+    from omnivault.modules.loss import CrossEntropyLoss
 
     ce = CrossEntropyLoss()
     loss = ce(logits=inputs, targets=targets)
@@ -568,7 +568,7 @@ def run_gradient_clipping(
     Returns:
         None
     """
-    from core.nn_utils import gradient_clipping
+    from omnivault.modules.nn_utils import gradient_clipping
 
     return gradient_clipping(parameters=parameters, max_norm=max_l2_norm)
 
@@ -577,7 +577,7 @@ def get_adamw_cls() -> Type[torch.optim.Optimizer]:
     """
     Returns a torch.optim.Optimizer that implements AdamW.
     """
-    from core.optimizer import AdamW
+    from omnivault.optimizers.adamw import AdamW
 
     return AdamW
 
@@ -612,7 +612,9 @@ def run_get_lr_cosine_schedule(
     Returns:
         Learning rate at the given iteration under the specified schedule.
     """
-    from core.scheduler import _cosine_schedule_with_warmup_and_post_annealing_lr_lambda
+    from omnivault.schedulers.cosine_annealing_warmup import (
+        _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
+    )
 
     return _cosine_schedule_with_warmup_and_post_annealing_lr_lambda(
         iter=it,
