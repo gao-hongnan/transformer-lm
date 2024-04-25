@@ -7,17 +7,14 @@ import numpy as np
 import torch
 import wandb
 from rich.pretty import pprint
-from tqdm import tqdm
 from tqdm.auto import tqdm
 
 from core.config import GPTConfig
 from core.layers import GPT
+from core.nn_utils import gradient_clipping, CrossEntropyLoss
 from core.optimizer import AdamW
-from models.transformer.util import (
-    clip_gradients,
-    cross_entropy_loss,
-    perplexity,
-)
+from models.transformer.util import  _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
+
 from models.util import load_batch, load_checkpoint, save_checkpoint
 
 logging.basicConfig(
@@ -31,6 +28,7 @@ class Trainer:
     def __init__(
         self,
         model,
+        criterion: CrossEntropyLoss,
         train_dataloader,
         valid_dataloader,
         optimizer,
@@ -50,8 +48,9 @@ class Trainer:
         use_scheduler,
         t_warmup,
         vocab_size,
-    ):
+    ) -> None:
         self.model = model
+        self.criterion = criterion
         self.train_dataloader = train_dataloader
         self.valid_dataloader = valid_dataloader
         self.optimizer = optimizer
@@ -79,10 +78,6 @@ class Trainer:
             print(
                 f"lr: {self.lr}, lr_min: {self.lr_min}, t_warmup: {self.t_warmup}, num_steps: {self.num_steps}"
             )
-            from models.transformer.util import (
-                _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
-            )
-
             self.scheduler = partial(
                 _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
                 max_learning_rate=self.lr,
@@ -103,12 +98,13 @@ class Trainer:
                     self.context_length,
                     self.device,
                 )
+                # FIXME: min to bypass shape error at random
                 inputs = torch.minimum(inputs, torch.tensor(self.vocab_size - 1))
                 targets = torch.minimum(targets, torch.tensor(self.vocab_size - 1))
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 logits = self.model(inputs)
-                valid_loss = cross_entropy_loss(logits, targets)
-                total_perpl += perplexity(logits, targets)
+                valid_loss = self.criterion(logits, targets)
+                total_perpl += torch.exp(valid_loss)
                 total_valid_loss += valid_loss.item()
 
             average_valid_loss = total_valid_loss / self.num_val_batches
@@ -145,10 +141,13 @@ class Trainer:
             self.optimizer.zero_grad()
 
             logits = self.model(inputs)
-            loss = cross_entropy_loss(logits, targets)
+            loss = self.criterion(logits, targets)
+
             loss.backward()
 
-            clip_gradients(self.model.parameters(), self.clip_norm)
+            gradient_clipping(
+                self.model.parameters(), max_norm=self.clip_norm, epsilon=1e-6
+            )
             self.optimizer.step()
 
             if self.use_scheduler and self.scheduler is not None:
@@ -164,12 +163,14 @@ class Trainer:
 
             if current_step % 100 == 0:
                 average_train_loss = total_train_loss / (current_step + 1)
+
                 wandb.log({"average_train_loss": average_train_loss})
 
             if current_step % self.val_every == 0:
                 val_loss, val_perpl = self.validate()
+
                 logger.info(
-                    f"Validation Loss: {val_loss:.4f}, Perplexity: {val_perpl:.4f}, lr: {self.optimizer.param_groups[0]['lr']}"
+                    f"Training Loss: {total_train_loss / (current_step + 1):.4f} | Validation Loss: {val_loss:.4f}, Perplexity: {val_perpl:.4f}, lr: {self.optimizer.param_groups[0]['lr']}"
                 )
                 if val_loss < self.best_val_loss:
                     self.best_val_loss = val_loss
@@ -189,7 +190,7 @@ class Trainer:
         wandb.log({"average_train_loss": average_train_loss})
 
 
-def main():
+def main() -> None:
     torch.manual_seed(42)
 
     # Set up argument parser
@@ -281,6 +282,7 @@ def main():
         weight_decay=args.weight_decay,
         eps=1e-8,
     )
+    criterion = CrossEntropyLoss()
 
     # Checkpoint directory
     checkpoint_dir = "./checkpoints"
@@ -289,6 +291,7 @@ def main():
     # Trainer initialization and training
     trainer = Trainer(
         model=model,
+        criterion=criterion,
         train_dataloader=train_data,
         valid_dataloader=valid_data,
         optimizer=optimizer,

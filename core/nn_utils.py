@@ -61,7 +61,7 @@ def cross_entropy_loss(
 
 
 class CrossEntropyLoss:
-    def __init__(self, reduction: Reduction = Reduction.MEAN):
+    def __init__(self, reduction: Reduction = Reduction.MEAN) -> None:
         """
         Initialize the CrossEntropyLoss.
 
