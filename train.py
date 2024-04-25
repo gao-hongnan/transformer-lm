@@ -12,8 +12,8 @@ from tqdm.auto import tqdm
 
 from core.config import GPTConfig
 from core.layers import GPT
+from core.optimizer import AdamW
 from models.transformer.util import (
-    AdamW,
     clip_gradients,
     cross_entropy_loss,
     perplexity,
@@ -75,16 +75,6 @@ class Trainer:
         self.vocab_size = vocab_size
 
         if self.use_scheduler:
-            # self.scheduler = torch.optim.lr_scheduler.LambdaLR(
-            #     self.optimizer,
-            #     lr_lambda=lambda step: cosine_learning_rate_schedule(
-            #         step,
-            #         self.lr,
-            #         self.lr_min,
-            #         self.t_warmup,
-            #         self.num_steps,
-            #     ),
-            # )
             print("Using scheduler")
             print(
                 f"lr: {self.lr}, lr_min: {self.lr_min}, t_warmup: {self.t_warmup}, num_steps: {self.num_steps}"
@@ -283,26 +273,13 @@ def main():
     model = GPT(config=gpt_config)
     model.to(device)
 
-    # Model initialization
-    # model = TransformerLM(
-    #     vocab_size=args.vocab_size,
-    #     context_length=args.ctx_len,
-    #     num_layers=args.num_layers,
-    #     d_model=args.d_model,
-    #     num_heads=args.num_heads,
-    #     d_ff=args.d_ff,
-    #     attn_pdrop=args.attn_pdrop,
-    #     residual_pdrop=args.residual_pdrop,
-    #     post_norm=args.post_norm,
-    #     layer_norm=args.layer_norm,
-    # ).to(device)
-
     # Optimizer setup
     optimizer = AdamW(
         model.parameters(),
         lr=args.lr_max,
         betas=(args.beta1, args.beta2),
         weight_decay=args.weight_decay,
+        eps=1e-8,
     )
 
     # Checkpoint directory

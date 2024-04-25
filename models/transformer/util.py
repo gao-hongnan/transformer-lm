@@ -131,66 +131,66 @@ def perplexity(logits, target):
     return perplexity.item()
 
 
-class AdamW(torch.optim.Optimizer):
-    def __init__(
-        self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8, weight_decay=0.01
-    ):
-        if lr < 0:
-            raise ValueError(f"Invalid learning rate: {lr}")
-        beta1, beta2 = betas
-        if not 0.0 <= beta1 < 1.0:
-            raise ValueError(f"Invalid beta1 value: {beta1}")
-        if not 0.0 <= beta2 < 1.0:
-            raise ValueError(f"Invalid beta2 value: {beta2}")
-        if eps <= 0:
-            raise ValueError(f"Invalid epsilon value: {eps}")
-        if weight_decay < 0:
-            raise ValueError(f"Invalid weight_decay value: {weight_decay}")
+# class AdamW(torch.optim.Optimizer):
+#     def __init__(
+#         self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8, weight_decay=0.01
+#     ):
+#         if lr < 0:
+#             raise ValueError(f"Invalid learning rate: {lr}")
+#         beta1, beta2 = betas
+#         if not 0.0 <= beta1 < 1.0:
+#             raise ValueError(f"Invalid beta1 value: {beta1}")
+#         if not 0.0 <= beta2 < 1.0:
+#             raise ValueError(f"Invalid beta2 value: {beta2}")
+#         if eps <= 0:
+#             raise ValueError(f"Invalid epsilon value: {eps}")
+#         if weight_decay < 0:
+#             raise ValueError(f"Invalid weight_decay value: {weight_decay}")
 
-        defaults = dict(
-            lr=lr, beta1=beta1, beta2=beta2, epsilon=eps, weight_decay=weight_decay
-        )
-        super().__init__(params, defaults)
+#         defaults = dict(
+#             lr=lr, beta1=beta1, beta2=beta2, epsilon=eps, weight_decay=weight_decay
+#         )
+#         super().__init__(params, defaults)
 
-    def step(self, closure: Optional[Callable] = None):
-        loss = None
-        if closure is not None:
-            loss = closure()
+#     def step(self, closure: Optional[Callable] = None):
+#         loss = None
+#         if closure is not None:
+#             loss = closure()
 
-        for group in self.param_groups:
-            for p in group["params"]:
-                if p.grad is None:
-                    continue
+#         for group in self.param_groups:
+#             for p in group["params"]:
+#                 if p.grad is None:
+#                     continue
 
-                grad = p.grad.data
-                state = self.state[p]
+#                 grad = p.grad.data
+#                 state = self.state[p]
 
-                # Initialize state
-                if len(state) == 0:
-                    state["step"] = 0
-                    state["m"] = torch.zeros_like(p.data)
-                    state["v"] = torch.zeros_like(p.data)
+#                 # Initialize state
+#                 if len(state) == 0:
+#                     state["step"] = 0
+#                     state["m"] = torch.zeros_like(p.data)
+#                     state["v"] = torch.zeros_like(p.data)
 
-                m, v = state["m"], state["v"]
-                beta1, beta2 = group["beta1"], group["beta2"]
-                lr = group["lr"]
-                epsilon = group["epsilon"]
-                weight_decay = group["weight_decay"]
+#                 m, v = state["m"], state["v"]
+#                 beta1, beta2 = group["beta1"], group["beta2"]
+#                 lr = group["lr"]
+#                 epsilon = group["epsilon"]
+#                 weight_decay = group["weight_decay"]
 
-                state["step"] += 1
+#                 state["step"] += 1
 
-                # AdamW update
-                m.mul_(beta1).add_(grad, alpha=1 - beta1)
-                v.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+#                 # AdamW update
+#                 m.mul_(beta1).add_(grad, alpha=1 - beta1)
+#                 v.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
 
-                bias_correction1 = 1 - beta1 ** state["step"]
-                bias_correction2 = 1 - beta2 ** state["step"]
-                step_size = lr * (bias_correction2**0.5) / bias_correction1
+#                 bias_correction1 = 1 - beta1 ** state["step"]
+#                 bias_correction2 = 1 - beta2 ** state["step"]
+#                 step_size = lr * (bias_correction2**0.5) / bias_correction1
 
-                p.data.addcdiv_(m, v.sqrt().add_(epsilon), value=-step_size)
-                p.data.add_(p.data, alpha=-lr * weight_decay)
+#                 p.data.addcdiv_(m, v.sqrt().add_(epsilon), value=-step_size)
+#                 p.data.add_(p.data, alpha=-lr * weight_decay)
 
-        return loss
+#         return loss
 
 
 def _cosine_schedule_with_warmup_and_post_annealing_lr_lambda(
