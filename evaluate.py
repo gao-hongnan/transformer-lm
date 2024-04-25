@@ -30,12 +30,13 @@ def top_p_sampling(probs, top_p=0.9):
     return new_probs
 
 
-def decode(model, tokenizer, prompt, max_length, temperature=1.0, top_p=0.9):
+def decode(model, device, tokenizer, prompt, max_length, temperature=1.0, top_p=0.9):
     model.eval()
     with torch.no_grad():
         input_ids = tokenizer.encode(prompt)
         input_ids = torch.tensor([input_ids], dtype=torch.long)
         generated = input_ids.tolist()[0]
+        input_ids = input_ids.to(device)
 
         for _ in range(max_length):
             output = model(input_ids)
@@ -210,12 +211,13 @@ def main():
         attn_pdrop=args.attn_pdrop,
         residual_pdrop=args.residual_pdrop,
         checkpoint_path=args.checkpoint_path,
-    ).to(device)
+    )
+    model = model.to(device)
     tokenizer = load_tokenizer(vocab_filepath=args.vocab_filepath, merges_filepath=args.merges_filepath)
 
     # Generate text
     generated_text = decode(
-        model, tokenizer, args.prompt, args.max_length, args.temperature, args.top_p
+        model, device, tokenizer, args.prompt, args.max_length, args.temperature, args.top_p
     )
     print("Generated Text:")
     print(generated_text)
