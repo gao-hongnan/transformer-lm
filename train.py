@@ -12,7 +12,6 @@ from tqdm.auto import tqdm
 
 from core.config import GPTConfig
 from core.layers import GPT
-from models.transformer.transformer import TransformerLM
 from models.transformer.util import (
     AdamW,
     clip_gradients,
@@ -50,6 +49,7 @@ class Trainer:
         val_every,
         use_scheduler,
         t_warmup,
+        vocab_size,
     ):
         self.model = model
         self.train_dataloader = train_dataloader
@@ -72,6 +72,7 @@ class Trainer:
         self.t_warmup = t_warmup
         self.scheduler = None
         self.best_val_loss = float("inf")
+        self.vocab_size = vocab_size
 
         if self.use_scheduler:
             # self.scheduler = torch.optim.lr_scheduler.LambdaLR(
@@ -112,6 +113,8 @@ class Trainer:
                     self.context_length,
                     self.device,
                 )
+                inputs = torch.minimum(inputs, torch.tensor(self.vocab_size - 1))
+                targets = torch.minimum(targets, torch.tensor(self.vocab_size - 1))
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 logits = self.model(inputs)
                 valid_loss = cross_entropy_loss(logits, targets)
@@ -327,6 +330,7 @@ def main():
         val_every=args.val_every,
         use_scheduler=args.use_scheduler,
         t_warmup=args.t_warmup,
+        vocab_size=args.vocab_size,
     )
 
     trainer.train()
