@@ -45,9 +45,7 @@ def decode(model, tokenizer, prompt, max_length, temperature=1.0, top_p=0.9):
             generated.append(next_token_id)
             if next_token_id == 0:
                 break
-            input_ids = torch.cat(
-                (input_ids, torch.tensor([[next_token_id]], dtype=torch.long)), dim=1
-            )
+            input_ids = torch.cat((input_ids, torch.tensor([[next_token_id]], dtype=torch.long)), dim=1)
 
         generated_text = tokenizer.decode(generated)
 
@@ -91,9 +89,7 @@ def load_tokenizer(dataset: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Decode text from a Transformer model."
-    )
+    parser = argparse.ArgumentParser(description="Decode text from a Transformer model.")
     parser.add_argument(
         "--vocab_size",
         type=int,
@@ -197,9 +193,7 @@ def main():
     tokenizer = load_tokenizer(args.tokenizer_dataset)
 
     # Generate text
-    generated_text = decode(
-        model, tokenizer, args.prompt, args.max_length, args.temperature, args.top_p
-    )
+    generated_text = decode(model, tokenizer, args.prompt, args.max_length, args.temperature, args.top_p)
     print("Generated Text:")
     print(generated_text)
 

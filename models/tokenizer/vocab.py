@@ -12,9 +12,7 @@ class Vocab:
         self.unk_idx: int = 0
 
     @classmethod
-    def from_dict(
-        cls, vocab: dict[int, bytes], special_tokens: list[str] = []
-    ) -> "Vocab":
+    def from_dict(cls, vocab: dict[int, bytes], special_tokens: list[str] = []) -> "Vocab":
         instance = cls(special_tokens)
         instance.idx_to_token = vocab
         return instance

@@ -3,70 +3,14 @@ got to treat 1s as masks."""
 
 from __future__ import annotations
 
-import math
-from typing import Literal, Optional, Tuple, Union, cast
+from typing import Literal, Tuple, cast
 
 import torch
-from omnivault.modules.activation import SoftmaxStable
+from omnivault.modules.activation import GELU, SoftmaxStable
+from omnivault.transformer.modules.layers.normalization import RMSNorm
 from torch import nn
-from torch.types import _device, _dtype
 
 from core.config import GPTConfig
-
-
-class RMSNorm(nn.Module):
-    def __init__(
-        self,
-        d_model: int,
-        eps: float = 1e-5,
-        device: Optional[Union[_device, str, None]] = None,
-        dtype: Optional[_dtype] = None,
-    ) -> None:
-        super().__init__()
-
-        factory_kwargs = {"device": device, "dtype": dtype}
-
-        self.d_model = d_model
-        self.normalized_shape = (d_model,)
-        self.eps = eps
-        self.gain = nn.Parameter(data=torch.empty(self.normalized_shape, **factory_kwargs))  # type: ignore[arg-type]
-
-        self.reset_parameters()
-
-    def reset_parameters(self) -> None:
-        nn.init.ones_(self.gain)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # x is of shape `[B, T, D]` so `D` is the last dimension
-        x_root_mean_squared_BT1 = torch.sqrt(
-            torch.sum(x**2, dim=-1, keepdim=True) / self.d_model + self.eps
-        )
-        x_normalized_BTD = x / x_root_mean_squared_BT1
-        x_normalized_affine_BTD = x_normalized_BTD * self.gain
-        return x_normalized_affine_BTD
-
-
-class GELU(nn.Module):
-    def __init__(self, approximate: Literal["tanh"] | None = None) -> None:
-        super().__init__()
-        self.approximate = approximate
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.approximate == "tanh":
-            x_out_BTD = (
-                0.5
-                * x
-                * (
-                    1.0
-                    + torch.tanh(
-                        math.sqrt(2.0 / math.pi) * (x + 0.044715 * torch.pow(x, 3.0))
-                    )
-                )
-            )
-            return x_out_BTD
-
-        x_out_BTD = x * 0.5 * (1 + torch.erf(input=x / 2**0.5))
-        return x_out_BTD
 
 
 class PositionwiseFeedForward(nn.Module):
@@ -90,16 +34,12 @@ class PositionwiseFeedForward(nn.Module):
             {
                 # incoming `B x T x D` and we are interested in `T x D` so weight is `D x d_ff`
                 # so that `Z @ W1 -> (T x D) @ (D x d_ff)`
-                "context_fc": nn.Linear(
-                    in_features=self.d_model, out_features=self.d_ff, bias=self.bias
-                ),
+                "context_fc": nn.Linear(in_features=self.d_model, out_features=self.d_ff, bias=self.bias),
                 "activation": self.activation,
                 # apply dropout after activation for random lights out
                 "dropout": nn.Dropout(p=self.dropout, inplace=False),
                 # incoming is Z @ W1 -> T x d_ff -> (T x d_ff) @ (d_ff x D) project back to D
-                "context_projection": nn.Linear(
-                    in_features=self.d_ff, out_features=self.d_model, bias=self.bias
-                ),
+                "context_projection": nn.Linear(in_features=self.d_ff, out_features=self.d_model, bias=self.bias),
             }
         )
 
@@ -218,27 +158,17 @@ class CausalMultiHeadSelfAttention(nn.Module):
         self.resid_pdrop = resid_pdrop
         self.bias = bias
 
-        self.W_Q = nn.Linear(
-            in_features=self.d_model, out_features=self.d_model, bias=self.bias
-        )
-        self.W_K = nn.Linear(
-            in_features=self.d_model, out_features=self.d_model, bias=self.bias
-        )
-        self.W_V = nn.Linear(
-            in_features=self.d_model, out_features=self.d_model, bias=self.bias
-        )
+        self.W_Q = nn.Linear(in_features=self.d_model, out_features=self.d_model, bias=self.bias)
+        self.W_K = nn.Linear(in_features=self.d_model, out_features=self.d_model, bias=self.bias)
+        self.W_V = nn.Linear(in_features=self.d_model, out_features=self.d_model, bias=self.bias)
 
         # alias of W_O
-        self.context_projection = nn.Linear(
-            in_features=self.d_model, out_features=self.d_model, bias=self.bias
-        )
+        self.context_projection = nn.Linear(in_features=self.d_model, out_features=self.d_model, bias=self.bias)
 
         # regularization
         self.resid_dropout = nn.Dropout(self.resid_pdrop)
 
         self.attention = ScaledDotProductAttention(dropout=self.attn_pdrop)
-
-        # tril/triu mask
 
         # causal mask to ensure that attention is only applied to the left in the input sequence
         # register buffer cause not learnable weights
@@ -271,9 +201,7 @@ class CausalMultiHeadSelfAttention(nn.Module):
         # fmt: on
 
         projected_context_vector: torch.Tensor = self.resid_dropout(
-            self.context_projection(
-                self.context_vector
-            )  # [B, T, D] @ [D, D] = [B, T, D]
+            self.context_projection(self.context_vector)  # [B, T, D] @ [D, D] = [B, T, D]
         )
         return projected_context_vector
 
@@ -323,26 +251,18 @@ class GPT(nn.Module):
         self.num_blocks = config.num_blocks
         self.vocab_size = config.vocab_size
 
-        self.blocks = nn.ModuleList(
-            [GPTBlock(config=config) for _ in range(self.num_blocks)]
-        )
+        self.blocks = nn.ModuleList([GPTBlock(config=config) for _ in range(self.num_blocks)])
 
         self.backbone = nn.ModuleDict(
             dict(
-                token_embeddings=nn.Embedding(
-                    num_embeddings=self.vocab_size, embedding_dim=self.d_model
-                ),
-                position_embeddings=nn.Embedding(
-                    num_embeddings=config.context_length, embedding_dim=self.d_model
-                ),
+                token_embeddings=nn.Embedding(num_embeddings=self.vocab_size, embedding_dim=self.d_model),
+                position_embeddings=nn.Embedding(num_embeddings=config.context_length, embedding_dim=self.d_model),
                 dropout=nn.Dropout(p=config.token_position_pdrop),
                 layers=self.blocks,
                 ln_final=RMSNorm(d_model=self.d_model, eps=1e-5),
             )
         )
-        self.head = nn.Linear(
-            in_features=self.d_model, out_features=self.vocab_size, bias=config.bias
-        )
+        self.head = nn.Linear(in_features=self.d_model, out_features=self.vocab_size, bias=config.bias)
 
         self.apply(self._init_weights)
 
@@ -352,9 +272,7 @@ class GPT(nn.Module):
             # NOTE: W_O is also projection but I did not have foresight to name it as such.
             if parameter_name.endswith(context_projections):
                 mean = 0.0
-                std_dev = 0.02 / torch.sqrt(
-                    torch.tensor(2 * config.num_blocks, dtype=torch.float)
-                )
+                std_dev = 0.02 / torch.sqrt(torch.tensor(2 * config.num_blocks, dtype=torch.float))
                 torch.nn.init.normal_(parameter, mean=mean, std=std_dev)
 
         if config.weight_tie:
@@ -370,9 +288,7 @@ class GPT(nn.Module):
         )
         for block in self.backbone.layers:
             if hasattr(block.attn, "causal_mask"):
-                block.attn.causal_mask = block.attn.causal_mask[
-                    :, :, :context_length, :context_length
-                ]
+                block.attn.causal_mask = block.attn.causal_mask[:, :, :context_length, :context_length]
 
             # update context length attribute in MultiHeadSelfAttention
             block.attn.context_length = context_length

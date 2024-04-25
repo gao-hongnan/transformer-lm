@@ -20,11 +20,7 @@ class TransformerBlock(nn.Module):
         self.ln1 = RMSNorm(d_model, eps=1e-5)
         self.ln2 = RMSNorm(d_model, eps=1e-5)
         self.attn = CausalMultiHeadAttention(d_model, num_heads, attn_pdrop)
-        self.dropout = (
-            nn.Dropout(resid_pdrop, inplace=False)
-            if resid_pdrop is not None
-            else nn.Identity()
-        )
+        self.dropout = nn.Dropout(resid_pdrop, inplace=False) if resid_pdrop is not None else nn.Identity()
         if not layer_norm:
             self.ln1 = nn.Identity()
             self.ln2 = nn.Identity()
@@ -86,12 +82,8 @@ class CausalMultiHeadAttention(nn.Module):
         keys = keys.view(batch, seq_len, self.num_heads, self.dk).transpose(1, 2)
         values = values.view(batch, seq_len, self.num_heads, self.dk).transpose(1, 2)
 
-        mask = torch.triu(torch.ones((seq_len, seq_len)).bool(), diagonal=1).to(
-            x.device
-        )
-        attn = scaled_dot_product_attention(
-            queries, keys, values, mask=mask, pdrop=self.attn_pdrop
-        )
+        mask = torch.triu(torch.ones((seq_len, seq_len)).bool(), diagonal=1).to(x.device)
+        attn = scaled_dot_product_attention(queries, keys, values, mask=mask, pdrop=self.attn_pdrop)
 
         attn = attn.transpose(1, 2)
         attn = attn.reshape(batch, seq_len, -1)
@@ -109,9 +101,7 @@ class RMSNorm(nn.Module):
     def forward(self, x: torch.FloatTensor):
         x_len = len(x.shape)
         n = x * self.weight.view(*[1] * (x_len - 1), self.d_model)
-        d = torch.sqrt(
-            (1 / self.d_model) * torch.square(x).sum(-1, keepdim=True) + self.eps
-        )
+        d = torch.sqrt((1 / self.d_model) * torch.square(x).sum(-1, keepdim=True) + self.eps)
         return n / d
 
 

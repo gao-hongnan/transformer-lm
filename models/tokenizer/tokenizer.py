@@ -88,17 +88,11 @@ class Tokenizer:
 
         return matches
 
-    def merge(
-        self, tokens: List[bytes], pair: Tuple[bytes, bytes], replacement: bytes
-    ) -> List[bytes]:
+    def merge(self, tokens: List[bytes], pair: Tuple[bytes, bytes], replacement: bytes) -> List[bytes]:
         new_tokens = []
         i = 0
         while i < len(tokens):
-            if (
-                tokens[i] == pair[0]
-                and i < len(tokens) - 1
-                and tokens[i + 1] == pair[1]
-            ):
+            if tokens[i] == pair[0] and i < len(tokens) - 1 and tokens[i + 1] == pair[1]:
                 new_tokens.append(replacement)
                 i += 2
             else:

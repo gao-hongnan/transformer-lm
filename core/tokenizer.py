@@ -11,9 +11,7 @@ from rich.pretty import pprint
 
 from rustsrc import RustTokenizer, train_bpe
 
-PAT = re.compile(
-    r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
-)
+PAT = re.compile(r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+""")
 
 
 @contextmanager
@@ -44,9 +42,7 @@ class Tokenizer:
         pprint(len(merges))
 
     @classmethod
-    def from_training_text(
-        cls, text: bytes | str, vocab_size: int, special_tokens: list[str] | None = None
-    ):
+    def from_training_text(cls, text: bytes | str, vocab_size: int, special_tokens: list[str] | None = None):
         if isinstance(text, str):
             text = text.encode("utf-8", errors="strict")
         if special_tokens is None:
@@ -77,9 +73,7 @@ class Tokenizer:
             return tokens.tolist()
         return tokens
 
-    def encode_iterable(
-        self, iterable: Iterable[str], as_list=True
-    ) -> Iterator[int] | Iterator[np.ndarray]:
+    def encode_iterable(self, iterable: Iterable[str], as_list=True) -> Iterator[int] | Iterator[np.ndarray]:
         for text in iterable:
             yield from self.encode(text, as_list=as_list)
 
@@ -146,9 +140,7 @@ def sample_and_compress(
     with open(DATASET_PATHS[dataset], "r") as f:
         text = f.read(1_000_000)
     # Get the fist 10 documents
-    first_10_lines = next(
-        iter(re.finditer(r"([\s\S]*?<\|endoftext\|>){10}", text))
-    ).group(0)
+    first_10_lines = next(iter(re.finditer(r"([\s\S]*?<\|endoftext\|>){10}", text))).group(0)
     before_len = len(first_10_lines.encode("utf-8", errors="replace"))
     tokens = tokenizer.encode(first_10_lines, as_list=False)
     after_len = tokens.nbytes

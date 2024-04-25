@@ -45,9 +45,7 @@ def run_positionwise_feedforward(
     # my_ffn.w2.weight.data = weights["w2.weight"]
     from core.layers import PositionwiseFeedForward
 
-    ffn = PositionwiseFeedForward(
-        d_model=d_model, d_ff=d_ff, bias=False, activation_name="gelu", dropout=0.0
-    )
+    ffn = PositionwiseFeedForward(d_model=d_model, d_ff=d_ff, bias=False, activation_name="gelu", dropout=0.0)
     ffn.ffn.context_fc.weight.data = weights["w1.weight"]
     ffn.ffn.context_projection.weight.data = weights["w2.weight"]
     out = ffn(z=in_features)
@@ -97,9 +95,7 @@ def run_scaled_dot_product_attention(
 
     mask = mask.unsqueeze(0).unsqueeze(0)
     scaled_dot_product_attention = ScaledDotProductAttention(dropout=pdrop)
-    context_vector, _attention_weights = scaled_dot_product_attention(
-        query=Q, key=K, value=V, mask=mask
-    )
+    context_vector, _attention_weights = scaled_dot_product_attention(query=Q, key=K, value=V, mask=mask)
     context_vector = context_vector.squeeze(0).squeeze(0)
     return cast(torch.FloatTensor, context_vector)
 
@@ -165,15 +161,9 @@ def run_multihead_self_attention(
         bias=False,
     )
 
-    mha.W_Q.weight.data = torch.cat(
-        [weights[f"q_heads.{i}.weight"] for i in range(num_heads)], dim=0
-    )
-    mha.W_K.weight.data = torch.cat(
-        [weights[f"k_heads.{i}.weight"] for i in range(num_heads)], dim=0
-    )
-    mha.W_V.weight.data = torch.cat(
-        [weights[f"v_heads.{i}.weight"] for i in range(num_heads)], dim=0
-    )
+    mha.W_Q.weight.data = torch.cat([weights[f"q_heads.{i}.weight"] for i in range(num_heads)], dim=0)
+    mha.W_K.weight.data = torch.cat([weights[f"k_heads.{i}.weight"] for i in range(num_heads)], dim=0)
+    mha.W_V.weight.data = torch.cat([weights[f"v_heads.{i}.weight"] for i in range(num_heads)], dim=0)
 
     # Load output projection weights
     mha.context_projection.weight.data = weights["output_proj.weight"]
@@ -398,18 +388,12 @@ def run_transformer_lm(
     for i in range(num_layers):
         gpt.blocks[i].rmns_1.gain.data = weights[f"layers.{i}.ln1.weight"]
         gpt.blocks[i].rmns_2.gain.data = weights[f"layers.{i}.ln2.weight"]
-        gpt.blocks[i].ffn.ffn.context_fc.weight.data = weights[
-            f"layers.{i}.ffn.w1.weight"
-        ]
-        gpt.blocks[i].ffn.ffn.context_projection.weight.data = weights[
-            f"layers.{i}.ffn.w2.weight"
-        ]
+        gpt.blocks[i].ffn.ffn.context_fc.weight.data = weights[f"layers.{i}.ffn.w1.weight"]
+        gpt.blocks[i].ffn.ffn.context_projection.weight.data = weights[f"layers.{i}.ffn.w2.weight"]
         gpt.blocks[i].attn.W_Q.weight.data = weights[f"layers.{i}.attn.q_proj.weight"]
         gpt.blocks[i].attn.W_K.weight.data = weights[f"layers.{i}.attn.k_proj.weight"]
         gpt.blocks[i].attn.W_V.weight.data = weights[f"layers.{i}.attn.v_proj.weight"]
-        gpt.blocks[i].attn.context_projection.weight.data = weights[
-            f"layers.{i}.attn.output_proj.weight"
-        ]
+        gpt.blocks[i].attn.context_projection.weight.data = weights[f"layers.{i}.attn.output_proj.weight"]
 
     out = gpt(in_indices=in_indices)
     return cast(torch.FloatTensor, out)
@@ -443,7 +427,7 @@ def run_rmsnorm(
         FloatTensor of with the same shape as `in_features` with the output of running
         layernorm of the `in_features`.
     """
-    from core.layers import RMSNorm
+    from omnivault.transformer.modules.layers.normalization import RMSNorm
 
     rms_norm = RMSNorm(d_model=d_model, eps=eps)
 
@@ -466,7 +450,6 @@ def run_gelu(in_features: torch.FloatTensor) -> torch.FloatTensor:
         FloatTensor of with the same shape as `in_features` with the output of applying
         GELU to each element.
     """
-    # from core.layers import GELU
     from omnivault.modules.activation import GELU
 
     gelu = GELU()
@@ -529,9 +512,7 @@ def run_softmax(in_features: torch.FloatTensor, dim: int) -> torch.FloatTensor:
     return cast(torch.FloatTensor, out)
 
 
-def run_cross_entropy(
-    inputs: torch.FloatTensor, targets: torch.LongTensor
-) -> torch.FloatTensor:
+def run_cross_entropy(inputs: torch.FloatTensor, targets: torch.LongTensor) -> torch.FloatTensor:
     """Given a tensor of inputs and targets, compute the average cross-entropy
     loss across examples.
 
@@ -554,9 +535,7 @@ def run_cross_entropy(
     return cast(torch.FloatTensor, loss)
 
 
-def run_gradient_clipping(
-    parameters: Iterable[torch.nn.Parameter], max_l2_norm: float
-) -> None:
+def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm: float) -> None:
     """Given a set of parameters, clip their combined gradients to have l2 norm at most max_l2_norm.
 
     Args:
@@ -612,9 +591,7 @@ def run_get_lr_cosine_schedule(
     Returns:
         Learning rate at the given iteration under the specified schedule.
     """
-    from omnivault.schedulers.cosine_annealing_warmup import (
-        _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
-    )
+    from omnivault.schedulers.cosine_annealing_warmup import _cosine_schedule_with_warmup_and_post_annealing_lr_lambda
 
     return _cosine_schedule_with_warmup_and_post_annealing_lr_lambda(
         iter=it,
@@ -734,9 +711,7 @@ def run_train_bpe(
     with open(input_path, "r") as f:
         text = f.read()
 
-    bpe = RegexTokenizer(
-        pattern=r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
-    )
+    bpe = RegexTokenizer(pattern=r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+""")
     bpe.train(text, vocab_size)
     for index, special_token in enumerate(special_tokens):
         bpe.add_special_token({special_token: vocab_size + index})

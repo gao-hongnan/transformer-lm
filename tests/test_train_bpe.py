@@ -54,9 +54,7 @@ def test_train_bpe():
     with open(reference_vocab_path) as f:
         gpt2_reference_vocab = json.load(f)
         reference_vocab = {
-            gpt2_vocab_index: bytes(
-                [gpt2_byte_decoder[token] for token in gpt2_vocab_item]
-            )
+            gpt2_vocab_index: bytes([gpt2_byte_decoder[token] for token in gpt2_vocab_item])
             for gpt2_vocab_item, gpt2_vocab_index in gpt2_reference_vocab.items()
         }
     # Rather than checking that the vocabs exactly match (since they could

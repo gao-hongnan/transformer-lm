@@ -46,9 +46,7 @@ def test_adamw() -> None:
         return
     # re-raise the error if the provided implementation doesn't
     # match either our reference implementation or the PyTorch implementation
-    numpy.testing.assert_allclose(
-        actual_weights.detach().numpy(), expected_weights.detach().numpy(), atol=1e-6
-    )
+    numpy.testing.assert_allclose(actual_weights.detach().numpy(), expected_weights.detach().numpy(), atol=1e-6)
 
 
 def test_get_lr_cosine_schedule() -> None:

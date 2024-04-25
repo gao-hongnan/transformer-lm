@@ -54,9 +54,7 @@ class TransformerLM(nn.Module):
 
     def forward(self, input_ids):
         # Generate token embeddings + position embeddings
-        position_ids = torch.arange(
-            input_ids.shape[1], dtype=torch.long, device=input_ids.device
-        )
+        position_ids = torch.arange(input_ids.shape[1], dtype=torch.long, device=input_ids.device)
 
         token_embeddings = self.token_embeddings(input_ids)
         position_embeddings = self.position_embeddings(position_ids).unsqueeze(0)

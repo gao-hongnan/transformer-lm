@@ -9,20 +9,16 @@ import wandb
 from omnivault.modules.loss import CrossEntropyLoss
 from omnivault.modules.nn_utils import gradient_clipping
 from omnivault.optimizers.adamw import AdamW
-from omnivault.schedulers.cosine_annealing_warmup import (
-    _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
-)
+from omnivault.schedulers.cosine_annealing_warmup import _cosine_schedule_with_warmup_and_post_annealing_lr_lambda
 from rich.pretty import pprint
 from tqdm.auto import tqdm
 
-from core.config import GPTConfig
+from core.config import GPTConfig, parse_args
 from core.data import get_batch
 from core.layers import GPT
 from core.utils import load_checkpoint, save_checkpoint
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s (%(levelname)s): %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s (%(levelname)s): %(message)s")
 
 logger = logging.getLogger(__name__)
 
@@ -78,9 +74,7 @@ class Trainer:
 
         if self.use_scheduler:
             print("Using scheduler")
-            print(
-                f"lr: {self.lr}, lr_min: {self.lr_min}, t_warmup: {self.t_warmup}, num_steps: {self.num_steps}"
-            )
+            print(f"lr: {self.lr}, lr_min: {self.lr_min}, t_warmup: {self.t_warmup}, num_steps: {self.num_steps}")
             self.scheduler = partial(
                 _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
                 max_learning_rate=self.lr,
@@ -148,9 +142,7 @@ class Trainer:
 
             loss.backward()
 
-            gradient_clipping(
-                self.model.parameters(), max_norm=self.clip_norm, epsilon=1e-6
-            )
+            gradient_clipping(self.model.parameters(), max_norm=self.clip_norm, epsilon=1e-6)
             self.optimizer.step()
 
             if self.use_scheduler and self.scheduler is not None:
@@ -210,9 +202,9 @@ def main(args: argparse.Namespace) -> None:
     logger.info(f"Using device: {device}")
 
     # Data loading
-    train_data, valid_data = np.memmap(
-        args.train_dataset, dtype=np.uint16, mode="r"
-    ), np.memmap(args.valid_dataset, dtype=np.uint16, mode="r")
+    train_data, valid_data = np.memmap(args.train_dataset, dtype=np.uint16, mode="r"), np.memmap(
+        args.valid_dataset, dtype=np.uint16, mode="r"
+    )
 
     gpt_config = GPTConfig(
         approximate=None,

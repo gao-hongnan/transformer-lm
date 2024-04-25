@@ -8,20 +8,14 @@ from tqdm import tqdm
 
 from models.tokenizer.vocab import Vocab
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s (%(levelname)s): %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s (%(levelname)s): %(message)s")
 logger = logging.getLogger(__name__)
 
 
-def extract_subword_frequencies(
-    input_path: str, special_tokens: Set[str], pattern: re.Pattern
-) -> Dict[str, int]:
+def extract_subword_frequencies(input_path: str, special_tokens: Set[str], pattern: re.Pattern) -> Dict[str, int]:
     frequencies = {}
 
-    for match in pattern.finditer(
-        open(input_path, "r", encoding="utf-8").read(), concurrent=True
-    ):
+    for match in pattern.finditer(open(input_path, "r", encoding="utf-8").read(), concurrent=True):
         match_str = match.group()
         if match_str not in special_tokens:
             frequencies[match_str] = frequencies.get(match_str, 0) + 1
@@ -64,9 +58,7 @@ def update_frequencies_after_merge(
             encoded_subwords[subword_index][byte_index],
         )
         frequencies[left_pair] -= count
-        frequencies[
-            (encoded_subwords[subword_index][byte_index - 1], new_byte)
-        ] += count
+        frequencies[(encoded_subwords[subword_index][byte_index - 1], new_byte)] += count
 
     if byte_index < len(encoded_subwords[subword_index]) - 2:
         right_pair = (
@@ -74,9 +66,7 @@ def update_frequencies_after_merge(
             encoded_subwords[subword_index][byte_index + 2],
         )
         frequencies[right_pair] -= count
-        frequencies[
-            (new_byte, encoded_subwords[subword_index][byte_index + 2])
-        ] += count
+        frequencies[(new_byte, encoded_subwords[subword_index][byte_index + 2])] += count
 
 
 def update_token_indices(
@@ -153,9 +143,7 @@ def train_bpe(input_path: str, vocab_size: int, special_tokens: List[str] = []):
 
     start_time = time.time()
     logger.info("Extracting subword frequencies")
-    subword_frequencies = extract_subword_frequencies(
-        input_path, set(special_tokens), pattern
-    )
+    subword_frequencies = extract_subword_frequencies(input_path, set(special_tokens), pattern)
     logger.info(
         "Took %s seconds to extract subword frequencies",
         round(time.time() - start_time, 2),
@@ -164,15 +152,11 @@ def train_bpe(input_path: str, vocab_size: int, special_tokens: List[str] = []):
     start_time = time.time()
     logger.info("Encoding subwords")
     encoded_subwords = encode_subwords(list(subword_frequencies.keys()))
-    logger.info(
-        "Took %s seconds to encode subwords", round(time.time() - start_time, 2)
-    )
+    logger.info("Took %s seconds to encode subwords", round(time.time() - start_time, 2))
 
     start_time = time.time()
     logger.info("Calculating byte pair frequencies")
-    byte_pair_frequencies, token_indices = calculate_byte_pair_frequencies(
-        encoded_subwords, subword_frequencies
-    )
+    byte_pair_frequencies, token_indices = calculate_byte_pair_frequencies(encoded_subwords, subword_frequencies)
     logger.info(
         "Took %s seconds to calculate byte pair frequencies",
         round(time.time() - start_time, 2),
@@ -185,9 +169,7 @@ def train_bpe(input_path: str, vocab_size: int, special_tokens: List[str] = []):
         if len(byte_pair_frequencies) == 0:
             break
 
-        best_pair = max(
-            byte_pair_frequencies, key=lambda x: (byte_pair_frequencies[x], x)
-        )
+        best_pair = max(byte_pair_frequencies, key=lambda x: (byte_pair_frequencies[x], x))
         new_byte = best_pair[0] + best_pair[1]
         vocab.add_token(new_byte)
         subword_indices = list(token_indices[best_pair].keys())
@@ -209,12 +191,8 @@ def train_bpe(input_path: str, vocab_size: int, special_tokens: List[str] = []):
                         byte_pair_frequencies,
                         count,
                     )
-                    update_token_indices(
-                        encoded_subwords, subword_index, byte_index, token_indices
-                    )
-                    merge_subwords(
-                        encoded_subwords, subword_index, byte_index, new_byte
-                    )
+                    update_token_indices(encoded_subwords, subword_index, byte_index, token_indices)
+                    merge_subwords(encoded_subwords, subword_index, byte_index, new_byte)
                     create_new_token_indices(
                         encoded_subwords,
                         subword_index,

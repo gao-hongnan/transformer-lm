@@ -24,9 +24,7 @@ class GPTConfig(BaseModel):
 
 def parse_args() -> argparse.Namespace:
     # Set up argument parser
-    parser = argparse.ArgumentParser(
-        description="Train a Transformer model with custom hyperparameters and utilities."
-    )
+    parser = argparse.ArgumentParser(description="Train a Transformer model with custom hyperparameters and utilities.")
     parser.add_argument("--name", type=str, default="tiny")
     parser.add_argument("--train_dataset", type=str, default=None)
     parser.add_argument("--valid_dataset", type=str, default=None)

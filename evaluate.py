@@ -35,9 +35,7 @@ def generate(
             logits = logits[0, -1]
             probs = softmax_with_temperature(logits, temperature)
             if top_p < 1.0:
-                sorted_probs, sorted_indices = torch.sort(
-                    probs, dim=-1, descending=True
-                )
+                sorted_probs, sorted_indices = torch.sort(probs, dim=-1, descending=True)
                 cumulative_sorted_probs = torch.cumsum(sorted_probs, dim=-1)
                 nucleus = cumulative_sorted_probs < 0.9
                 nucleus[0] = nucleus[0] | (~nucleus.any())

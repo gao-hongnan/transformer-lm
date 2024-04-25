@@ -16,22 +16,16 @@ from .common import FIXTURES_PATH
 
 
 def test_positionwise_feedforward() -> None:
-    reference_weights = torch.load(
-        FIXTURES_PATH / "positionwise_feedforward_weights.pt"
-    )
+    reference_weights = torch.load(FIXTURES_PATH / "positionwise_feedforward_weights.pt")
     in_features = torch.load(FIXTURES_PATH / "in_features.pt")
-    expected_output = torch.load(
-        FIXTURES_PATH / "positionwise_feedforward_expected_output.pt"
-    )
+    expected_output = torch.load(FIXTURES_PATH / "positionwise_feedforward_expected_output.pt")
     d_model = 64
     d_ff = 128
 
     actual_output = run_positionwise_feedforward(
         d_model=d_model, d_ff=d_ff, weights=reference_weights, in_features=in_features
     )
-    numpy.testing.assert_allclose(
-        actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6
-    )
+    numpy.testing.assert_allclose(actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6)
 
 
 def test_scaled_dot_product_attention() -> None:
@@ -43,15 +37,9 @@ def test_scaled_dot_product_attention() -> None:
     V = torch.load(FIXTURES_PATH / "scaled_dot_product_attention_V.pt")[0]
     mask = torch.load(FIXTURES_PATH / "scaled_dot_product_attention_mask.pt")
     pdrop = 0.0
-    expected_output = torch.load(
-        FIXTURES_PATH / "scaled_dot_product_attention_expected_output.pt"
-    )[0]
-    actual_output = run_scaled_dot_product_attention(
-        K=K, Q=Q, V=V, mask=mask, pdrop=pdrop
-    )
-    numpy.testing.assert_allclose(
-        actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6
-    )
+    expected_output = torch.load(FIXTURES_PATH / "scaled_dot_product_attention_expected_output.pt")[0]
+    actual_output = run_scaled_dot_product_attention(K=K, Q=Q, V=V, mask=mask, pdrop=pdrop)
+    numpy.testing.assert_allclose(actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6)
 
 
 def test_4d_scaled_dot_product_attention() -> None:
@@ -62,25 +50,15 @@ def test_4d_scaled_dot_product_attention() -> None:
     V = torch.load(FIXTURES_PATH / "scaled_dot_product_attention_V.pt")
     mask = torch.load(FIXTURES_PATH / "scaled_dot_product_attention_mask.pt")
     pdrop = 0.0
-    expected_output = torch.load(
-        FIXTURES_PATH / "scaled_dot_product_attention_expected_output.pt"
-    )
-    actual_output = run_scaled_dot_product_attention(
-        K=K, Q=Q, V=V, mask=mask, pdrop=pdrop
-    )
-    numpy.testing.assert_allclose(
-        actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6
-    )
+    expected_output = torch.load(FIXTURES_PATH / "scaled_dot_product_attention_expected_output.pt")
+    actual_output = run_scaled_dot_product_attention(K=K, Q=Q, V=V, mask=mask, pdrop=pdrop)
+    numpy.testing.assert_allclose(actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6)
 
 
 def test_multihead_self_attention() -> None:
-    reference_weights = torch.load(
-        FIXTURES_PATH / "unbatched_multihead_self_attention_weights.pt"
-    )
+    reference_weights = torch.load(FIXTURES_PATH / "unbatched_multihead_self_attention_weights.pt")
     in_features = torch.load(FIXTURES_PATH / "in_features.pt")
-    expected_output = torch.load(
-        FIXTURES_PATH / "unbatched_multihead_self_attention_expected_output.pt"
-    )
+    expected_output = torch.load(FIXTURES_PATH / "unbatched_multihead_self_attention_expected_output.pt")
     d_model = 64
     num_heads = 2
     attn_pdrop = 0.0
@@ -91,9 +69,7 @@ def test_multihead_self_attention() -> None:
         weights=reference_weights,
         in_features=in_features,
     )
-    numpy.testing.assert_allclose(
-        actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6
-    )
+    numpy.testing.assert_allclose(actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6)
 
 
 def test_transformer_lm() -> None:
@@ -122,9 +98,7 @@ def test_transformer_lm() -> None:
         weights=reference_weights,
         in_indices=in_indices,
     )
-    numpy.testing.assert_allclose(
-        actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-4
-    )
+    numpy.testing.assert_allclose(actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-4)
 
 
 def test_transformer_lm_truncated_input() -> None:
@@ -140,9 +114,7 @@ def test_transformer_lm_truncated_input() -> None:
 
     reference_weights = torch.load(FIXTURES_PATH / "transformer_lm_weights.pt")
     in_indices_truncated = torch.load(FIXTURES_PATH / "in_indices_truncated.pt")
-    truncated_expected_output = torch.load(
-        FIXTURES_PATH / "transformer_lm_truncated_expected_output.pt"
-    )
+    truncated_expected_output = torch.load(FIXTURES_PATH / "transformer_lm_truncated_expected_output.pt")
     truncated_actual_output = run_transformer_lm(
         vocab_size=vocab_size,
         context_length=context_length,
@@ -182,9 +154,7 @@ def test_transformer_block() -> None:
         weights=reference_weights,
         in_features=in_features,
     )
-    numpy.testing.assert_allclose(
-        actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6
-    )
+    numpy.testing.assert_allclose(actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6)
 
 
 def test_rmsnorm() -> None:
@@ -192,12 +162,8 @@ def test_rmsnorm() -> None:
     in_features = torch.load(FIXTURES_PATH / "in_features.pt")
     expected_output = torch.load(FIXTURES_PATH / "rmsnorm_expected_output.pt")
     d_model = 64
-    actual_output = run_rmsnorm(
-        d_model=d_model, eps=1e-5, weights=reference_weights, in_features=in_features
-    )
-    numpy.testing.assert_allclose(
-        actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6
-    )
+    actual_output = run_rmsnorm(d_model=d_model, eps=1e-5, weights=reference_weights, in_features=in_features)
+    numpy.testing.assert_allclose(actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6)
 
 
 def test_gelu() -> None:
@@ -226,9 +192,7 @@ def test_gelu() -> None:
         ]
     )
     actual_output = run_gelu(x)
-    numpy.testing.assert_allclose(
-        actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6
-    )
+    numpy.testing.assert_allclose(actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6)
 
 
 def test_gelu_matches_pytorch() -> None:
@@ -240,6 +204,4 @@ def test_gelu_matches_pytorch() -> None:
     )
     expected_output = F.gelu(x)
     actual_output = run_gelu(x)
-    numpy.testing.assert_allclose(
-        actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6
-    )
+    numpy.testing.assert_allclose(actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6)
