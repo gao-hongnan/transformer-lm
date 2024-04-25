@@ -250,8 +250,6 @@ class CausalMultiHeadSelfAttention(nn.Module):
     def forward(self, *, z: torch.Tensor) -> torch.Tensor:
         B, T, D = z.size()
 
-        assert self.context_length == T
-
         # fmt: off
         Q: torch.Tensor = self.W_Q(z).contiguous() # Z @ W_Q = [B, T, D] @ [D, D] = [B, T, D]
         K: torch.Tensor = self.W_K(z).contiguous() # Z @ W_K = [B, T, D] @ [D, D] = [B, T, D]
