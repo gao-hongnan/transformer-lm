@@ -1,8 +1,10 @@
 import cProfile
-import pstats
 import io
+import pstats
 import time
+
 from memory_profiler import profile
+
 from models.tokenizer.tokenizer import Tokenizer
 
 

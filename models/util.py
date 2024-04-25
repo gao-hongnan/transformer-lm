@@ -1,10 +1,9 @@
-import torch
+import os
+from typing import IO, BinaryIO, Optional
 
 import numpy as np
 import numpy.typing as npt
-
-from typing import IO, BinaryIO, Iterable, Optional, Type
-import os
+import torch
 
 
 def save_checkpoint(

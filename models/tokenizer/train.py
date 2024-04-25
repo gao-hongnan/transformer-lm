@@ -1,9 +1,10 @@
 import collections
-import regex as re
-from typing import List, Tuple, Dict, Set
-from tqdm import tqdm
-import time
 import logging
+import time
+from typing import Dict, List, Set, Tuple
+
+import regex as re
+from tqdm import tqdm
 
 from models.tokenizer.vocab import Vocab
 

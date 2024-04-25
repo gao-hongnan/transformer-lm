@@ -1,22 +1,25 @@
 import argparse
-import torch
-from tqdm import tqdm
-import os
-import wandb
-import numpy as np
 import logging
+import os
 from functools import partial
-from torch.optim.lr_scheduler import LambdaLR
 
+import numpy as np
+import torch
+import wandb
+from rich.pretty import pprint
+from tqdm import tqdm
+from tqdm.auto import tqdm
+
+from core.config import GPTConfig
+from core.layers import GPT
 from models.transformer.transformer import TransformerLM
 from models.transformer.util import (
     AdamW,
-    cross_entropy_loss,
-    cosine_learning_rate_schedule,
     clip_gradients,
+    cross_entropy_loss,
     perplexity,
 )
-from models.util import save_checkpoint, load_checkpoint, load_batch
+from models.util import load_batch, load_checkpoint, save_checkpoint
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s (%(levelname)s): %(message)s"
@@ -82,9 +85,15 @@ class Trainer:
             #     ),
             # )
             print("Using scheduler")
-            print(f"lr: {self.lr}, lr_min: {self.lr_min}, t_warmup: {self.t_warmup}, num_steps: {self.num_steps}")
-            from models.transformer.util import get_cosine_annealing_with_warmup_and_post_annealing, _cosine_schedule_with_warmup_and_post_annealing_lr_lambda
-            self.scheduler = partial(_cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
+            print(
+                f"lr: {self.lr}, lr_min: {self.lr_min}, t_warmup: {self.t_warmup}, num_steps: {self.num_steps}"
+            )
+            from models.transformer.util import (
+                _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
+            )
+
+            self.scheduler = partial(
+                _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
                 max_learning_rate=self.lr,
                 min_learning_rate=self.lr_min,
                 warmup_iters=self.t_warmup,
@@ -251,19 +260,39 @@ def main():
         args.train_dataset, dtype=np.uint16, mode="r"
     ), np.memmap(args.val_dataset, dtype=np.uint16, mode="r")
 
-    # Model initialization
-    model = TransformerLM(
-        vocab_size=args.vocab_size,
-        context_length=args.ctx_len,
-        num_layers=args.num_layers,
+    gpt_config = GPTConfig(
+        approximate=None,
+        activation_name="gelu",
         d_model=args.d_model,
-        num_heads=args.num_heads,
         d_ff=args.d_ff,
-        attn_pdrop=args.attn_pdrop,
-        residual_pdrop=args.residual_pdrop,
-        post_norm=args.post_norm,
-        layer_norm=args.layer_norm,
-    ).to(device)
+        num_heads=args.num_heads,
+        context_length=args.ctx_len,
+        attn_pdrop=0.1,
+        resid_pdrop=0.1,
+        bias=False,
+        vocab_size=args.vocab_size,
+        num_blocks=args.num_layers,
+        token_position_pdrop=0.1,
+        weight_tie=True,
+    )
+    pprint(gpt_config)
+
+    model = GPT(config=gpt_config)
+    model.to(device)
+
+    # Model initialization
+    # model = TransformerLM(
+    #     vocab_size=args.vocab_size,
+    #     context_length=args.ctx_len,
+    #     num_layers=args.num_layers,
+    #     d_model=args.d_model,
+    #     num_heads=args.num_heads,
+    #     d_ff=args.d_ff,
+    #     attn_pdrop=args.attn_pdrop,
+    #     residual_pdrop=args.residual_pdrop,
+    #     post_norm=args.post_norm,
+    #     layer_norm=args.layer_norm,
+    # ).to(device)
 
     # Optimizer setup
     optimizer = AdamW(

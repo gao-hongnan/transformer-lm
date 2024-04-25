@@ -1,8 +1,7 @@
 import torch
 from torch import nn
-from torch.nn import functional as F
 
-from models.transformer.layers import TransformerBlock, RMSNorm
+from models.transformer.layers import RMSNorm, TransformerBlock
 
 
 class TransformerLM(nn.Module):

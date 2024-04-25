@@ -1,11 +1,10 @@
-import collections
-from typing import Iterable, Iterator, List, Tuple, Dict
 import os
 import pickle
+from typing import Iterable, Iterator, List, Tuple
+
 import regex as re
 
 from models.tokenizer.train import train_bpe
-from models.tokenizer.vocab import Vocab
 
 
 class Tokenizer:

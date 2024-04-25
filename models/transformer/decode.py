@@ -1,9 +1,10 @@
 import argparse
+
 import torch
 import torch.nn.functional as F
 
-from models.transformer.transformer import TransformerLM
 from models.tokenizer.tokenizer import Tokenizer
+from models.transformer.transformer import TransformerLM
 from models.util import load_checkpoint
 
 
@@ -64,7 +65,6 @@ def load_model(
     attn_pdrop: float,
     residual_pdrop: float,
 ):
-
     lm = TransformerLM(
         vocab_size=vocab_size,
         context_length=ctx_len,

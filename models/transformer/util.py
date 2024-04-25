@@ -1,14 +1,14 @@
-from typing import Optional
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import math
 from collections.abc import Callable
-from typing import Optional
-from torch.optim.optimizer import Optimizer
-from torch.optim.lr_scheduler import LambdaLR
 from functools import partial
+from typing import Optional
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+from torch.optim.lr_scheduler import LambdaLR
+from torch.optim.optimizer import Optimizer
+
 
 def scaled_dot_product_attention(
     q: torch.FloatTensor,
@@ -193,44 +193,6 @@ class AdamW(torch.optim.Optimizer):
         return loss
 
 
-def cosine_learning_rate_schedule(
-    it, max_learning_rate, min_learning_rate, warmup_iters, cosine_cycle_iters
-):
-    """
-    Calculate the learning rate at a given iteration using a cosine annealing schedule with a warm-up period.
-
-    Args:
-        it: int
-            Iteration number to get learning rate for.
-        max_learning_rate: float
-            alpha_max, the maximum learning rate for the cosine learning rate schedule (with warmup).
-        min_learning_rate: float
-            alpha_min, the minimum / final learning rate for the cosine learning rate schedule (with warmup).
-        warmup_iters: int
-            T_w, the number of iterations to linearly warm-up the learning rate.
-        cosine_cycle_iters: int
-            T_c, the total number of iterations over which the cosine schedule should run.
-
-    Returns:
-        float: The computed learning rate at the specified iteration.
-    """
-    if it < warmup_iters:
-        print(f"it={it}, warmup_iters={warmup_iters}, max_learning_rate={max_learning_rate}")
-        # Linear warm-up phase from 0 to max_learning_rate
-        return (it / warmup_iters) * max_learning_rate
-    elif it <= cosine_cycle_iters:
-        # Cosine annealing phase from max_learning_rate to min_learning_rate
-        return min_learning_rate + 0.5 * (max_learning_rate - min_learning_rate) * (
-            1
-            + math.cos(
-                math.pi * (it - warmup_iters) / (cosine_cycle_iters - warmup_iters)
-            )
-        )
-    else:
-        # Post-annealing phase, constant at min_learning_rate
-        return min_learning_rate
-
-
 def _cosine_schedule_with_warmup_and_post_annealing_lr_lambda(
     iter: int,
     *,
@@ -264,7 +226,9 @@ def _cosine_schedule_with_warmup_and_post_annealing_lr_lambda(
         return (iter / max(1, warmup_iters)) * max_learning_rate
     elif iter <= cosine_cycle_iters:  # cosine annealing phase
         progress = (iter - warmup_iters) / (cosine_cycle_iters - warmup_iters)
-        return min_learning_rate + 0.5 * (max_learning_rate - min_learning_rate) * (1 + math.cos(math.pi * progress))
+        return min_learning_rate + 0.5 * (max_learning_rate - min_learning_rate) * (
+            1 + math.cos(math.pi * progress)
+        )
     else:  # post-annealing phase
         return min_learning_rate
 
@@ -313,6 +277,7 @@ def get_cosine_annealing_with_warmup_and_post_annealing(
     )
     return LambdaLR(optimizer, lr_lambda, last_epoch=last_epoch, verbose=verbose)
 
+
 def clip_gradients(parameters, max_norm):
     """
     Clip the gradients of the parameters to the specified maximum l2-norm.
@@ -328,7 +293,8 @@ def clip_gradients(parameters, max_norm):
     """
     # Calculate the total norm of all parameters
     total_norm = torch.sqrt(
-        sum(torch.sum(p.grad.data**2) for p in parameters if p.grad is not None) + 1e-6
+        sum(torch.sum(p.grad.data**2) for p in parameters if p.grad is not None)
+        + 1e-6
     )
 
     # Scale down gradients if the total norm exceeds the max_norm

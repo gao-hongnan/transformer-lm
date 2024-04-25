@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-from models.transformer.util import scaled_dot_product_attention, softmax, gelu
+from models.transformer.util import gelu, scaled_dot_product_attention
 
 
 class TransformerBlock(nn.Module):
@@ -108,7 +107,6 @@ class RMSNorm(nn.Module):
         self.gain = torch.ones(d_model) if gain is None else gain
 
     def forward(self, x: torch.FloatTensor):
-
         x_len = len(x.shape)
         n = x * self.weight.view(*[1] * (x_len - 1), self.d_model)
         d = torch.sqrt(
