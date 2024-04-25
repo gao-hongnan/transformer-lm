@@ -14,13 +14,13 @@ conda activate transformer_lm
 python3 train.py \
 	--name "tiny" \
 	--vocab_size 10000 \
-	--ctx_len 256 \
+	--context_length 256 \
 	--d_model 512 \
 	--num_layers 4 \
 	--num_heads 16 \
 	--d_ff 2048 \
 	--attn_pdrop 0.1 \
-	--residual_pdrop 0.1 \
+	--resid_pdrop 0.1 \
 	--lr_max 0.001 \
 	--lr_min 0.00001 \
 	--t_warmup 500 \

@@ -1,12 +1,13 @@
 import torch
+from rich.pretty import pprint
 
 from core.config import GPTConfig
 from core.layers import GPT
-from core.nn_utils import Softmax
+from omnivault.modules.activation import Softmax
 from core.tokenizer import Tokenizer
 from core.utils import load_checkpoint
-from train import parse_args
-from rich.pretty import pprint
+from core.config import parse_args
+
 
 def softmax_with_temperature(dist, temperature: float) -> torch.Tensor:
     softmax = Softmax(dim=-1)
@@ -28,9 +29,7 @@ def generate(
     model.eval()
     with torch.no_grad():
         while len(tokens) < max_length and not decoded.endswith("<|endoftext|>"):
-            input_tensor = torch.tensor(
-                [tokens], dtype=torch.long, device=device
-            )
+            input_tensor = torch.tensor([tokens], dtype=torch.long, device=device)
             logits = model(input_tensor)
             logits = logits[0, -1]
             probs = softmax_with_temperature(logits, temperature)
@@ -56,14 +55,13 @@ def generate(
 
 
 def main(args):
-
     gpt_config = GPTConfig(
         approximate=None,
         activation_name="gelu",
         d_model=args.d_model,
         d_ff=args.d_ff,
         num_heads=args.num_heads,
-        context_length=args.ctx_len,
+        context_length=args.context_length,
         attn_pdrop=0.1,
         resid_pdrop=0.1,
         bias=False,
@@ -84,12 +82,20 @@ def main(args):
     pprint(tokenizer.encode(args.prompt))
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    result = generate(model=model, device=device, tokenizer=tokenizer, prompt=args.prompt, max_length=args.max_length, temperature=args.temperature, p=args.top_p)
+    result = generate(
+        model=model,
+        device=device,
+        tokenizer=tokenizer,
+        prompt=args.prompt,
+        max_length=args.max_length,
+        temperature=args.temperature,
+        p=args.top_p,
+    )
     return result
+
 
 if __name__ == "__main__":
     args = parse_args()
     torch.manual_seed(args.seed)
     generated = main(args)
     pprint(generated)
-

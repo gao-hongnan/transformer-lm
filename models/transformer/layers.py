@@ -11,7 +11,7 @@ class TransformerBlock(nn.Module):
         num_heads,
         d_ff,
         attn_pdrop=None,
-        residual_pdrop=None,
+        resid_pdrop=None,
         post_norm=False,
         layer_norm=True,
         parallel=False,
@@ -21,8 +21,8 @@ class TransformerBlock(nn.Module):
         self.ln2 = RMSNorm(d_model, eps=1e-5)
         self.attn = CausalMultiHeadAttention(d_model, num_heads, attn_pdrop)
         self.dropout = (
-            nn.Dropout(residual_pdrop, inplace=False)
-            if residual_pdrop is not None
+            nn.Dropout(resid_pdrop, inplace=False)
+            if resid_pdrop is not None
             else nn.Identity()
         )
         if not layer_norm:

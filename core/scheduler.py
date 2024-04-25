@@ -1,14 +1,9 @@
 from __future__ import annotations
 
 import math
-from functools import partial
-
-from torch.optim.lr_scheduler import LambdaLR
-from torch.optim.optimizer import Optimizer
 
 __all__ = [
     "_cosine_schedule_with_warmup_and_post_annealing_lr_lambda",
-    "get_cosine_annealing_with_warmup_and_post_annealing",
 ]
 
 
@@ -50,48 +45,3 @@ def _cosine_schedule_with_warmup_and_post_annealing_lr_lambda(
         )
     else:  # post-annealing phase
         return min_learning_rate
-
-
-# NOTE: see cs336
-def get_cosine_annealing_with_warmup_and_post_annealing(
-    optimizer: Optimizer,
-    max_learning_rate: float,
-    min_learning_rate: float,
-    warmup_iters: int,
-    cosine_cycle_iters: int,
-    last_epoch: int = -1,
-    verbose: bool = False,
-) -> LambdaLR:
-    """
-    Create a learning rate scheduler with warmup followed by cosine annealing.
-
-    Parameters
-    ----------
-    optimizer : `torch.optim.Optimizer`
-        The optimizer for which to schedule the learning rate.
-    max_learning_rate : float
-        The initial and maximum learning rate during the warmup.
-    min_learning_rate : float
-        The minimum learning rate after cosine annealing.
-    warmup_iters : int
-        Number of warmup iterations.
-    cosine_cycle_iters : int
-        Total number of iterations for the cosine annealing cycle (including warmup).
-    last_epoch : int
-        The index of the last epoch when resuming training.
-    verbose : bool
-        Print the learning rate at every update.
-
-    Returns
-    -------
-    `torch.optim.lr_scheduler.LambdaLR`
-        The scheduler with the appropriate schedule.
-    """
-    lr_lambda = partial(
-        _cosine_schedule_with_warmup_and_post_annealing_lr_lambda,
-        max_learning_rate=max_learning_rate,
-        min_learning_rate=min_learning_rate,
-        warmup_iters=warmup_iters,
-        cosine_cycle_iters=cosine_cycle_iters,
-    )
-    return LambdaLR(optimizer, lr_lambda, last_epoch=last_epoch, verbose=verbose)

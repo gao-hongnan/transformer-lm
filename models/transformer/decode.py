@@ -57,23 +57,23 @@ def decode(model, tokenizer, prompt, max_length, temperature=1.0, top_p=0.9):
 def load_model(
     dataset: str,
     vocab_size: int,
-    ctx_len: int,
+    context_length: int,
     d_model: int,
     num_layers: int,
     num_heads: int,
     d_ff: int,
     attn_pdrop: float,
-    residual_pdrop: float,
+    resid_pdrop: float,
 ):
     lm = TransformerLM(
         vocab_size=vocab_size,
-        context_length=ctx_len,
+        context_length=context_length,
         num_layers=num_layers,
         d_model=d_model,
         num_heads=num_heads,
         d_ff=d_ff,
         attn_pdrop=attn_pdrop,
-        residual_pdrop=residual_pdrop,
+        resid_pdrop=resid_pdrop,
     )
     load_checkpoint(f"checkpoints/{dataset}_best.pth", lm, None)
 
@@ -101,7 +101,7 @@ def main():
         help="Vocabulary size of the model.",
     )
     parser.add_argument(
-        "--ctx_len",
+        "--context_length",
         type=int,
         required=True,
         help="Context length of the model.",
@@ -137,7 +137,7 @@ def main():
         help="Dropout probability for attention layers.",
     )
     parser.add_argument(
-        "--residual_pdrop",
+        "--resid_pdrop",
         type=float,
         required=True,
         help="Dropout probability for residual connections.",
@@ -186,13 +186,13 @@ def main():
     model = load_model(
         dataset=args.model_dataset,
         vocab_size=args.vocab_size,
-        ctx_len=args.ctx_len,
+        context_length=args.context_length,
         d_model=args.d_model,
         num_layers=args.num_layers,
         num_heads=args.num_heads,
         d_ff=args.d_ff,
         attn_pdrop=args.attn_pdrop,
-        residual_pdrop=args.residual_pdrop,
+        resid_pdrop=args.resid_pdrop,
     ).to(device)
     tokenizer = load_tokenizer(args.tokenizer_dataset)
 
@@ -208,4 +208,4 @@ if __name__ == "__main__":
     main()
 
 # sample usage:
-# python3 -m models.transformer.decode --prompt "Once upon a time," --max_length 100 --temperature 0.8 --top_p 0.85 --model_dataset "corpus" --tokenizer_dataset "corpus" --vocab_size 500 --ctx_len 128 --d_model 128 --num_layers 2 --num_heads 4 --d_ff 512 --attn_pdrop 0.05 --residual_pdrop 0.05 --lr_max 0.007 --lr_min 0.0001 --t_warmup 10 --t_cos 200 --epochs 50 --train_batch_size 20 --val_batch_size 16 --num_train_batches 20 --num_val_batches 5
+# python3 -m models.transformer.decode --prompt "Once upon a time," --max_length 100 --temperature 0.8 --top_p 0.85 --model_dataset "corpus" --tokenizer_dataset "corpus" --vocab_size 500 --context_length 128 --d_model 128 --num_layers 2 --num_heads 4 --d_ff 512 --attn_pdrop 0.05 --resid_pdrop 0.05 --lr_max 0.007 --lr_min 0.0001 --t_warmup 10 --t_cos 200 --epochs 50 --train_batch_size 20 --val_batch_size 16 --num_train_batches 20 --num_val_batches 5

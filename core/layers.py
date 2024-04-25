@@ -11,7 +11,7 @@ from torch import nn
 from torch.types import _device, _dtype
 
 from core.config import GPTConfig
-from core.nn_utils import Softmax
+from omnivault.modules.activation import Softmax
 
 
 class RMSNorm(nn.Module):
@@ -134,7 +134,7 @@ class ScaledDotProductAttention(nn.Module):
         mask: torch.BoolTensor | None = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         # fmt: off
-        _, _, T, d_q = query.size()
+        T, d_q = query.size(-2), query.size(-1)
 
         attention_scores  = torch.matmul(query, key.transpose(dim0=-2, dim1=-1)) / torch.sqrt(torch.tensor(d_q).float())        # Q @ K.T = [B, H, T, d_q] @ [B, H, d_q, T] = [B, H, T, T]
 

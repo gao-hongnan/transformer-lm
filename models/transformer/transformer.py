@@ -14,7 +14,7 @@ class TransformerLM(nn.Module):
         num_heads: int,
         d_ff: int,
         attn_pdrop: float | None = None,
-        residual_pdrop: float | None = None,
+        resid_pdrop: float | None = None,
         post_norm: bool = False,
         layer_norm: bool = True,
         parallel: bool = False,
@@ -24,7 +24,7 @@ class TransformerLM(nn.Module):
         self.context_length = context_length
         self.d_model = d_model
         self.num_layers = num_layers
-        self.residual_pdrop = residual_pdrop
+        self.resid_pdrop = resid_pdrop
 
         # Token and position embeddings
         self.token_embeddings = nn.Embedding(vocab_size, d_model)
@@ -38,7 +38,7 @@ class TransformerLM(nn.Module):
                     num_heads,
                     d_ff,
                     attn_pdrop,
-                    residual_pdrop,
+                    resid_pdrop,
                     post_norm,
                     layer_norm,
                 )
@@ -46,7 +46,7 @@ class TransformerLM(nn.Module):
             ]
         )
 
-        self.dropout = nn.Dropout(residual_pdrop)
+        self.dropout = nn.Dropout(resid_pdrop)
 
         # Output layers
         self.ln_final = RMSNorm(d_model, eps=1e-5)

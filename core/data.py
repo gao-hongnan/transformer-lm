@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Iterable, Literal, Tuple
+from typing import Literal, Tuple
 
 import numpy as np
 import numpy.typing as npt
 import torch
 
-__all__ = ["get_batch", "data_generator"]
+__all__ = ["get_batch"]
 
 
 def get_batch(
@@ -93,18 +93,3 @@ def get_batch(
     else:
         x, y = x.to(device), y.to(device)
     return x, y
-
-
-def data_generator(
-    dataset: npt.NDArray[np.uint16],
-    batch_size: int,
-    context_length: int,
-    device_type: Literal["cpu", "cuda"],
-) -> Iterable[tuple[torch.Tensor, torch.Tensor]]:
-    while True:
-        yield get_batch(
-            dataset=dataset,
-            batch_size=batch_size,
-            context_length=context_length,
-            device_type=device_type,
-        )

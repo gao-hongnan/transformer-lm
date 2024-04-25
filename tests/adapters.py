@@ -95,10 +95,12 @@ def run_scaled_dot_product_attention(
     """
     from core.layers import ScaledDotProductAttention
 
+    mask = mask.unsqueeze(0).unsqueeze(0)
     scaled_dot_product_attention = ScaledDotProductAttention(dropout=pdrop)
     context_vector, _attention_weights = scaled_dot_product_attention(
         query=Q, key=K, value=V, mask=mask
     )
+    context_vector = context_vector.squeeze(0).squeeze(0)
     return cast(torch.FloatTensor, context_vector)
 
 
@@ -464,7 +466,8 @@ def run_gelu(in_features: torch.FloatTensor) -> torch.FloatTensor:
         FloatTensor of with the same shape as `in_features` with the output of applying
         GELU to each element.
     """
-    from core.layers import GELU
+    # from core.layers import GELU
+    from omnivault.modules.activation import GELU
 
     gelu = GELU()
     out = gelu(x=in_features)
@@ -519,7 +522,7 @@ def run_softmax(in_features: torch.FloatTensor, dim: int) -> torch.FloatTensor:
         FloatTensor of with the same shape as `in_features` with the output of
         softmax normalizing the specified `dim`.
     """
-    from core.nn_utils import Softmax
+    from omnivault.modules.activation import Softmax
 
     softmax = Softmax(dim=dim)
     out = softmax(z=in_features)

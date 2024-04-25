@@ -10,56 +10,6 @@ class Reduction(Enum):
     MEAN = "mean"
     SUM = "sum"
 
-
-class Softmax:
-    def __init__(self, dim: int | None = None) -> None:
-        self.dim = dim
-
-    def __call__(self, z: torch.Tensor) -> torch.Tensor:
-        max_z = torch.max(z, dim=self.dim, keepdim=True).values
-        numerator = torch.exp(z - max_z)
-        denominator = torch.sum(numerator, dim=self.dim, keepdim=True)
-        g = numerator / denominator
-        return g
-
-
-def cross_entropy_loss(
-    logits: torch.FloatTensor, targets: torch.LongTensor
-) -> torch.FloatTensor:
-    """Given a tensor of logits and a tensor of targets, compute the cross-entropy loss.
-
-    Args:
-        logits: torch.FloatTensor
-            Tensor of logits from the model.
-            Shape is (batch_size, seq_len, vocab_size).
-        targets: torch.LongTensor
-            Tensor of targets.
-            Shape is (batch_size, seq_len).
-
-    Returns:
-        loss: torch.FloatTensor
-            Scalar tensor representing the cross-entropy loss.
-    """
-
-    if len(logits.shape) == 3:
-        logits = logits.view(-1, logits.size(-1))
-        targets = targets.view(-1)
-
-    assert logits.size(0) == targets.size(0)
-
-    s_logits = logits - torch.max(logits, dim=1, keepdim=True)[0]
-    sum_logits = torch.sum(torch.exp(s_logits), dim=1)
-    sum_log_exp = torch.log(sum_logits)
-
-    logits_true_class = torch.gather(
-        s_logits, dim=1, index=targets.unsqueeze(1)
-    ).squeeze(1)
-    logits_true_class = logits_true_class.squeeze()
-
-    loss_per_example = sum_log_exp - logits_true_class
-    return torch.mean(loss_per_example)
-
-
 class CrossEntropyLoss:
     def __init__(self, reduction: Reduction = Reduction.MEAN) -> None:
         """

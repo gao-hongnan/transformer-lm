@@ -14,13 +14,13 @@ conda activate transformer_lm
 python3 train.py \
 	--name "owt" \
 	--vocab_size 32000 \
-	--ctx_len 512 \
+	--context_length 512 \
 	--d_model 1024 \
 	--num_layers 8 \
 	--num_heads 32 \
 	--d_ff 4096 \
 	--attn_pdrop 0.1 \
-	--residual_pdrop 0.1 \
+	--resid_pdrop 0.1 \
 	--lr_max 0.001 \
 	--lr_min 0.00001 \
 	--t_warmup 500 \
