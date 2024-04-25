@@ -258,7 +258,6 @@ def main(args: argparse.Namespace) -> None:
         name=args.name,
         resume=args.resume,
         lr=args.lr_max,
-        lr_min=args.lr_min,
         val_every=args.val_every,
         t_warmup=args.t_warmup,
         vocab_size=args.vocab_size,

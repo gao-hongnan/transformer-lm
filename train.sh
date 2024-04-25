@@ -22,6 +22,5 @@
 	--num_steps 10000 \
 	--num_val_batches 1 \
     --val_every 20 \
-	--use_scheduler \
 	--train_dataset "/content/drive/MyDrive/Colab Notebooks/tinystories_train_tokens.npy" \
 	--valid_dataset "/content/drive/MyDrive/Colab Notebooks/tinystories_valid_tokens.npy"
