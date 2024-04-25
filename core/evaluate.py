@@ -56,7 +56,6 @@ def decode(model, tokenizer, prompt, max_length, temperature=1.0, top_p=0.9):
 
 
 def load_model(
-    dataset: str,
     vocab_size: int,
     ctx_len: int,
     d_model: int,
@@ -175,18 +174,7 @@ def main():
         default=0.9,
         help="Top-p value for nucleus sampling. Lower is more focused.",
     )
-    parser.add_argument(
-        "--model_dataset",
-        type=str,
-        required=True,
-        help="Dataset used to train the model (tiny | owt | corpus).",
-    )
-    parser.add_argument(
-        "--tokenizer_dataset",
-        type=str,
-        required=True,
-        help="Dataset used to train the tokenizer (tiny | owt | corpus).",
-    )
+
     parser.add_argument(
         "--checkpoint_path",
         type=str,
@@ -213,7 +201,6 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = load_model(
-        dataset=args.model_dataset,
         vocab_size=args.vocab_size,
         ctx_len=args.ctx_len,
         d_model=args.d_model,
