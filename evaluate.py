@@ -73,7 +73,7 @@ def main(args: argparse.Namespace) -> str:
 
     load_checkpoint(src=args.checkpoint_path, model=model)
 
-    tokenizer = Tokenizer.from_files(
+    tokenizer = Tokenizer.load_tokenizer_from(
         special_tokens=["<|endoftext|>"],
         vocab_filepath=args.vocab_filepath,
         merges_filepath=args.merges_filepath,

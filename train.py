@@ -4,22 +4,21 @@ import os
 from functools import partial
 
 import numpy as np
+import numpy.typing as npt
 import torch
-from torch import nn
 import wandb
 from omnivault.modules.loss import CrossEntropyLoss
 from omnivault.modules.nn_utils import gradient_clipping
 from omnivault.optimizers.adamw import AdamW
 from omnivault.schedulers.cosine_annealing_warmup import _cosine_schedule_with_warmup_and_post_annealing_lr_lambda
 from rich.pretty import pprint
+from torch import nn
 from tqdm.auto import tqdm
 
 from core.config import GPTConfig, parse_args
 from core.data import get_batch
 from core.layers import GPT
 from core.utils import load_checkpoint, save_checkpoint
-import numpy.typing as npt
-
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s (%(levelname)s): %(message)s")
 

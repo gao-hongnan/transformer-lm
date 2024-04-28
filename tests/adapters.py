@@ -622,7 +622,9 @@ def run_save_checkpoint(
         out: str | os.PathLike | BinaryIO | IO[bytes]
             Path or file-like object to serialize the model, optimizer, and iteration to.
     """
-    raise NotImplementedError
+    from core.utils import save_checkpoint
+
+    save_checkpoint(model, optimizer, iteration, out)
 
 
 def run_load_checkpoint(
@@ -646,7 +648,9 @@ def run_load_checkpoint(
     Returns:
         int, the previously-serialized number of iterations.
     """
-    raise NotImplementedError
+    from core.utils import load_checkpoint
+
+    return load_checkpoint(src, model, optimizer)
 
 
 def get_tokenizer(
@@ -672,7 +676,9 @@ def get_tokenizer(
     Returns:
         A BPE tokenizer that uses the provided vocab, merges, and special tokens.
     """
-    raise NotImplementedError
+    from core.tokenizer import Tokenizer
+
+    return Tokenizer(vocab=vocab, merges=merges, special_tokens=special_tokens)
 
 
 def run_train_bpe(
@@ -705,16 +711,10 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
+    from core.tokenizer import Tokenizer
 
-    from core.bpe import RegexTokenizer
-
-    with open(input_path, "r") as f:
+    with open(input_path, "rb") as f:
         text = f.read()
+        tokenizer = Tokenizer.from_corpus(text, vocab_size, special_tokens)
 
-    bpe = RegexTokenizer(pattern=r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+""")
-    bpe.train(text, vocab_size)
-    for index, special_token in enumerate(special_tokens):
-        bpe.add_special_token({special_token: vocab_size + index})
-
-    # bpe = BPE.train(input_path, vocab_size, special_tokens)
-    return bpe.vocab, bpe.merges
+    return tokenizer.vocab, tokenizer.merges
